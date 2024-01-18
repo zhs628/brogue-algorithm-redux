@@ -4,7 +4,7 @@
 from array2d import array2d
 
 
-def print_grid(grid, symbols:str = '.+#'):
+def print_grid(grid, symbols:str = '.+#', message='------------------------'):
         symbols = list(symbols)
         frequency_dict = {}
         
@@ -25,5 +25,5 @@ def print_grid(grid, symbols:str = '.+#'):
             symbol_dict[key] = value
         def replace_element_with_symbol(_, __, element):
             return symbol_dict[element]
-        
+        print(message)
         grid.copy().map2d(replace_element_with_symbol).draw(width=2)
