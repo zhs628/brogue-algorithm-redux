@@ -2,10 +2,9 @@
 from array2d import array2d
 
 
-def draw_circle(grid: array2d, value, center_x: int, center_y: int, radius) -> None:
+def draw_circle(grid: array2d, value=None, center_x: int=None, center_y: int=None, radius=None) -> None:
     # 逐行扫描圆的外接正方形, 并对距离圆心为 sqrt( r^2 + r) 的点填充为 value
 
-    
     x_scan_range = range(max(0, center_x - radius - 1), min(grid.width, center_x + radius)+1)
     y_scan_range = range(max(0, center_y - radius - 1), min(grid.height, grid.height + radius)+1)
     
@@ -20,7 +19,7 @@ def draw_circle(grid: array2d, value, center_x: int, center_y: int, radius) -> N
 
 
 
-def draw_rectangle(grid: array2d, value, conor_x: int, conor_y: int, width: int, height: int) -> None:
+def draw_rectangle(grid: array2d, value=None, conor_x: int=None, conor_y: int=None, width: int=None, height: int=None) -> None:
     x_scan_range = range(conor_x, conor_x+width)
     y_scan_range = range(conor_y, conor_y+height)
     

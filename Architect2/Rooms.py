@@ -1,11 +1,11 @@
 from array2d import array2d
 import random
-from . import SimpleShapes 
+from . import SimpleShapes
 
 
 # 在本文件中, 完全复刻自brogue的算法将使用 "brogue_<brogue中该函数名>" 命名
 
-def fill_grid(grid, value):
+def fill_grid(grid, value=0):
     SimpleShapes.draw_rectangle(grid, value=value, conor_x=0, conor_y=0, width=grid.width, height=grid.height)
 
 def brogue_designCircularRoom(grid):
@@ -61,8 +61,8 @@ def brogue_designCrossRoom(grid):
     room1_width = random.randint(3, 12)
     room1_x =                                           \
         random.randint(
-            a= max(0, grid.width//2 - (room1_width - 1)),
-            b= grid.width//2
+            max(0, grid.width//2 - (room1_width - 1)),
+            grid.width//2
         )
     
     room2_width = random.randint(4, 20)
