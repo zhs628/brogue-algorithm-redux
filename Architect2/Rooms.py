@@ -6,7 +6,7 @@ from . import SimpleShapes
 # 在本文件中, 完全复刻自brogue的算法将使用 "brogue_<brogue中该函数名>" 命名
 
 def fill_grid(grid, value=0):
-    SimpleShapes.draw_rectangle(grid, value=value, conor_x=0, conor_y=0, width=grid.width, height=grid.height)
+    SimpleShapes.draw_rectangle(grid, value, 0, 0, grid.width, grid.height)
 
 def brogue_designCircularRoom(grid):
     '''
@@ -27,7 +27,7 @@ def brogue_designCircularRoom(grid):
         room_radius = random.randint(2, 4)
     
     # 绘制房间
-    SimpleShapes.draw_circle(grid, value=1, center_x=center_x, center_y=center_y, radius=room_radius)
+    SimpleShapes.draw_circle(grid, 1, center_x, center_y, room_radius)
     
     # 绘制房间中的空洞
     if room_radius > 6 and random.random() < 0.5:
@@ -48,7 +48,8 @@ def brogue_designSmallRoom(grid):
     room_x = (grid.width - room_width) // 2  # 确保房间的中心和grid中心对齐
     room_y = (grid.height - room_height) // 2
     
-    SimpleShapes.draw_rectangle(grid, value=1, conor_x=room_x, conor_y=room_y, width=room_width, height=room_height)
+    fill_value=1
+    SimpleShapes.draw_rectangle(grid, fill_value, room_x, room_y, room_width, room_height)
     
     
 def brogue_designCrossRoom(grid):
@@ -91,8 +92,9 @@ def brogue_designCrossRoom(grid):
     
     
     # 绘制
-    SimpleShapes.draw_rectangle(grid, value=1, conor_x=room1_x, conor_y=room1_y, width=room1_width, height=room1_height)
-    SimpleShapes.draw_rectangle(grid, value=1, conor_x=room2_x, conor_y=room2_y, width=room2_width, height=room2_height)
+    fill_value = 1
+    SimpleShapes.draw_rectangle(grid, fill_value, room1_x, room1_y, room1_width, room1_height)
+    SimpleShapes.draw_rectangle(grid, fill_value, room2_x, room2_y, room2_width, room2_height)
     
 def brogue_designSymmetricalCrossRoom(grid):
     '''
@@ -117,8 +119,9 @@ def brogue_designSymmetricalCrossRoom(grid):
     room2_y = (grid.height - room2_height)//2
     
     # 绘制
-    SimpleShapes.draw_rectangle(grid, value=1, conor_x=room1_x, conor_y=room1_y, width=room1_width, height=room1_height)
-    SimpleShapes.draw_rectangle(grid, value=1, conor_x=room2_x, conor_y=room2_y, width=room2_width, height=room2_height)
+    fill_value = 1
+    SimpleShapes.draw_rectangle(grid, fill_value, room1_x, room1_y, room1_width, room1_height)
+    SimpleShapes.draw_rectangle(grid, fill_value, room2_x, room2_y, room2_width, room2_height)
 
 
 def brogue_designChunkyRoom(grid):
@@ -167,4 +170,5 @@ def brogue_designChunkyRoom(grid):
         # 记录本次生成的圆的信息
         circles.append(circle)
         #绘制
-        SimpleShapes.draw_circle(grid, value=1, center_x=circle['x'], center_y=circle['y'], radius=radius)
+        fill_value = 1
+        SimpleShapes.draw_circle(grid, fill_value, circle['x'], circle['y'], radius)
