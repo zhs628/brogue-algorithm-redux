@@ -5,10 +5,10 @@ from . import SimpleShapes
 
 # 在本文件中, 完全复刻自brogue的算法将使用 "brogue_<brogue中该函数名>" 命名
 
-def fill_grid(grid, value=0):
+def fill_grid(grid: array2d, value=0):
     SimpleShapes.draw_rectangle(grid, value, 0, 0, grid.width, grid.height)
 
-def brogue_designCircularRoom(grid):
+def brogue_designCircularRoom(grid: array2d):
     '''
     在grid中央上绘制一个圆形房间, 有大概率生成实心圆, 有小概率生成甜甜圈样式
     
@@ -35,7 +35,7 @@ def brogue_designCircularRoom(grid):
         SimpleShapes.draw_circle(grid, value=0, center_x=center_x, center_y=center_y, radius=hole_radius)
 
 
-def brogue_designSmallRoom(grid):
+def brogue_designSmallRoom(grid: array2d):
     '''
     在grid中央上绘制一个矩形房间
     
@@ -52,7 +52,7 @@ def brogue_designSmallRoom(grid):
     SimpleShapes.draw_rectangle(grid, fill_value, room_x, room_y, room_width, room_height)
     
     
-def brogue_designCrossRoom(grid):
+def brogue_designCrossRoom(grid: array2d):
     '''
     在房间偏左下的位置生成两个矩形交叉而成的房间
     '''
@@ -96,7 +96,7 @@ def brogue_designCrossRoom(grid):
     SimpleShapes.draw_rectangle(grid, fill_value, room1_x, room1_y, room1_width, room1_height)
     SimpleShapes.draw_rectangle(grid, fill_value, room2_x, room2_y, room2_width, room2_height)
     
-def brogue_designSymmetricalCrossRoom(grid):
+def brogue_designSymmetricalCrossRoom(grid: array2d):
     '''
     在房间中央生成两个矩形交叉而成的房间
     
@@ -124,7 +124,7 @@ def brogue_designSymmetricalCrossRoom(grid):
     SimpleShapes.draw_rectangle(grid, fill_value, room2_x, room2_y, room2_width, room2_height)
 
 
-def brogue_designChunkyRoom(grid):
+def brogue_designChunkyRoom(grid: array2d):
     '''
     生成若干连续的小圆(下面称作chunk)拼成的房间, 首个圆生成在grid中央
     '''
