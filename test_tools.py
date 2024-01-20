@@ -3,6 +3,7 @@
 from array2d import array2d
 import traceback
 import random
+import time
 
 def _grid_draw_str(grid):
     line_list = []
@@ -98,6 +99,10 @@ def test_all_rooms(
     all_func_passed = True
     for i, func_tuple in enumerate(function_list):
         name, func = func_tuple
+        
+        avg_time_sum = 0
+        avg_time_count = 0
+        
         print(f"\t---- Testing: {name} ({i+1}/{len(function_list)})")
 
         passing_scale = array2d(
@@ -115,7 +120,11 @@ def test_all_rooms(
             for i in range(test_count):
                 try:
                     try:
+                        start_time = time.time()
                         func(array2d(w, h))
+                        end_time = time.time()
+                        avg_time_count += 1
+                        avg_time_sum += end_time - start_time
                     except AssertionError:
                         if not ignore_assertion_error:
                             raise Exception("AssertionError")
@@ -133,6 +142,7 @@ def test_all_rooms(
             else:
                 passing_scale[w, h] = "X"
 
+        print(f"\t average: {avg_time_sum / avg_time_count} s")
         if all_scales_passed:
             print("\t passed")
         else:
