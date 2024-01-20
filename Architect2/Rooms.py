@@ -257,7 +257,7 @@ def _brogue_designCavern(
     grid.fill_(0)
     
     blob_grid = array2d(max_width, max_height, default=None)
-    round_count = 10
+    round_count = 5
     noise_probability = 0.55
     birth_parameters = "ffffffttt"
     survival_parameters = "ffffttttt"
@@ -313,11 +313,17 @@ def _brogue_createBlobOnGrid(
         [-1, 1], [ 0, 1], [ 1, 1]
     ]
     
-    
+    TIME_OUT_LOOP = 1000
+    loop_count = 0
     while True:
+        loop_count += 1
+        assert loop_count <= TIME_OUT_LOOP
+        
+        
+        grid.fill_(0)
         # ---- 生成初始噪声
-        for x in range(grid.width):
-            for y in range(grid.height):
+        for x in range(blob_max_width):
+            for y in range(blob_max_height):
                 if not grid.is_valid(x, y):
                     continue
                 if random.random() < noise_probability:
@@ -352,8 +358,7 @@ def _brogue_createBlobOnGrid(
                     
                     if will_birth:
                         grid[cell_x, cell_y] = survival_value
-                    # if will_survive:
-                    #     pass
+
                     if not will_survive:
                         grid[cell_x, cell_y] = dead_value
         
@@ -415,28 +420,26 @@ def _brogue_createBlobOnGrid(
         #   outer loop                 inner loop          scan target      x,y/y,x
             ((0, grid.height, 1), (grid.width,),  "min_y",         "y,x"),
             ((0, grid.width, 1),  (grid.height,), "min_x",         "x,y"),
-            ((0, grid.height, -1),(grid.width,),  "max_y",         "y,x"),
-            ((0, grid.width, -1), (grid.height,), "max_x",         "x,y"),
+            ((grid.height-1, 0-1, -1),(grid.width,),  "max_y",         "y,x"),
+            ((grid.width-1, 0-1, -1), (grid.height,), "max_x",         "x,y"),
         ]
         
         # 从四个方向自外向内搜索块的边界
         for outer_loop, inner_loop, scan_target, x_y in scan_loops:
-            print(outer_loop)
+
+
             # 扫描线从grid的边缘开始向内推进
             for scan_line_index in range(*outer_loop):
-                
+
                 # 遍历当前正在扫描的行或列
                 has_found_scan_target = False
                 for scan_cell_index in range(*inner_loop):
-                    
                     # 确定正在扫描的格子坐标
                     if x_y == "x,y":
                         x, y = scan_line_index, scan_cell_index
                     else:
                         y, x = scan_line_index, scan_cell_index
-                    
-                    # if scan_target == 'min_x':
-                    #     print(y,x)
+
                     
                     # 首次发现时记录当前的扫描线的推进距离 scan_line 这就是块的边界
                     if grid[x, y] == biggest_blob["id"]:
@@ -450,7 +453,6 @@ def _brogue_createBlobOnGrid(
             
         
         # 计算规格
-        print(biggest_blob)
         biggest_blob["width"] = biggest_blob["max_x"] - biggest_blob["min_x"] + 1
         biggest_blob["height"] = biggest_blob["max_y"] - biggest_blob["min_y"] + 1
         
@@ -466,9 +468,12 @@ def _brogue_createBlobOnGrid(
                         grid[x, y] = 0
             
             # 终止外层while循环, 返回最大块的信息
+            print("loop_count:", loop_count)
             return (biggest_blob["min_x"], biggest_blob["min_y"], biggest_blob["width"], biggest_blob["height"])
         
-        
+        # else:
+        #     import test_tools
+        #     test_tools.print_grid(grid, symbols=' ')
 
 
 
