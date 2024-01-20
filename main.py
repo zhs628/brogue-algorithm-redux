@@ -48,6 +48,8 @@ Rooms.brogue_designSmallRoom(grid)
 test_tools.print_grid(grid)
 
 
+test_tools.print_grid(Rooms._brogue_createBlobOnGrid(grid, 0,30,0,30))
+
 # check functions' accuracy in Rooms
 test_tools.test_all_rooms(
     # selected_func_name=["brogue_designCrossRoom", "brogue_designChunkyRoom"],

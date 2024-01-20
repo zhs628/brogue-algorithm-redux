@@ -3,7 +3,7 @@ import random
 from . import SimpleShapes
 
 
-# 在本文件中, 完全复刻自brogue的算法将使用 "brogue_<brogue中该函数名>" 命名
+# 在本文件中, 完全复刻自brogue的算法将使用 "brogue_<brogue中该函数的原名>" 命名
 
 def fill_grid(grid: array2d, value=0):
     SimpleShapes.draw_rectangle(grid, value, 0, 0, grid.width, grid.height)
@@ -57,7 +57,7 @@ def brogue_designCircularRoom(grid: array2d):
     '''
     assert grid.width >= 21 and grid.height >= 21 
     
-    fill_grid(grid, value=0)  # 以0填充所有的格子
+    grid.fill_(0)  # 以0填充所有的格子
 
     center_x = grid.width//2
     center_y = grid.height//2
@@ -87,7 +87,7 @@ def brogue_designSmallRoom(grid: array2d):
     '''
     assert grid.width >= 6 and grid.height >= 4 
     
-    fill_grid(grid, value=0)  # 以0填充所有的格子
+    grid.fill_(0)  # 以0填充所有的格子
     
     room_width = random.randint(3, 6)
     room_height = random.randint(2, 4)
@@ -103,7 +103,7 @@ def brogue_designCrossRoom(grid: array2d):
     在房间偏左下的位置生成两个矩形交叉而成的房间
     '''
     assert grid.width >= 30 and grid.height >= 15
-    fill_grid(grid, value=0)  # 以0填充所有的格子
+    grid.fill_(0)  # 以0填充所有的格子
 
     # 确定两个房间的x坐标和宽度
     room1_width = random.randint(3, 12)
@@ -150,7 +150,7 @@ def brogue_designSymmetricalCrossRoom(grid: array2d):
     将不会生成"L"形房间
     '''
     assert grid.width >= 8 and grid.height >= 5 
-    fill_grid(grid, value=0)  # 以0填充所有的格子
+    grid.fill_(0)  # 以0填充所有的格子
 
     # 确定房间1的规格
     room1_width = random.randint(4, 8)
@@ -178,7 +178,7 @@ def brogue_designChunkyRoom(grid: array2d):
     '''
     assert grid.width >= 14 and grid.height >= 15
     
-    fill_grid(grid, value=0)  # 以0填充所有的格子
+    grid.fill_(0) # 以0填充所有的格子
 
     chunk_count = random.randint(2, 8)  # 即将生成的小圆数量
     radius = 2  # 所有小圆的半径
@@ -224,7 +224,7 @@ def brogue_designChunkyRoom(grid: array2d):
 def brogue_designEntranceRoom(grid: array2d):
     assert grid.width >= 22 and grid.height >= 12 
     
-    fill_grid(grid, value=0)
+    grid.fill_(0)
     
     room1_width = 8
     room1_height = 10
@@ -254,22 +254,25 @@ def _brogue_designCavern(
     '''
     使用元胞自动机生成限定规格的一块洞穴
     '''
-    fill_grid(grid, 0)
+    grid.fill_(0)
     
     blob_grid = array2d(max_width, max_height, default=None)
-    round_count = 5
-    _brogue_createBlobOnGrid(blob_grid, round_count, min_width, max_width, min_height, max_height)
+    round_count = 10
+    noise_probability = 0.55
+    birth_parameters = "ffffffttt"
+    survival_parameters = "ffffttttt"
+    _brogue_createBlobOnGrid(blob_grid, min_width, max_width, min_height, max_height, round_count, noise_probability, birth_parameters, survival_parameters)
     # TODO
 
 
 # _brogue_designCavern 的一部分, 用于构造房间, _brogue_designCavern会将该房间插入到大的grid
 def _brogue_createBlobOnGrid(
-    blob_grid: array2d, 
-    round_count: int,  
+    grid: array2d, 
     blob_min_width: int, 
     blob_max_width: int, 
     blob_min_height: int,  
     blob_max_height: int,  
+    round_count = 5, 
     noise_probability = 0.55, 
     birth_parameters = 'ffffffttt',  
     survival_parameters = 'ffffttttt' \
@@ -278,10 +281,8 @@ def _brogue_createBlobOnGrid(
     本函数利用细胞自动机按照培育参数在给定的空网格之内生成图案, 并返回最大的块在网格中的位置和规格
     
     参数列表:
-        blob_grid:  
+        grid:  
             用于培育块的网格
-        round_count:  
-            细胞自动机的迭代次数
         blob_min_width:  
             用于限制块的规格
         blob_max_width:  
@@ -290,6 +291,8 @@ def _brogue_createBlobOnGrid(
             用于限制块的规格
         blob_max_height:   
             用于限制块的规格
+        round_count = 10:  
+            细胞自动机的迭代次数
         noise_probability = 0.55 :
             初始噪声的生成率 
         birth_parameters = 'ffffffttt' :
@@ -301,12 +304,9 @@ def _brogue_createBlobOnGrid(
         四元组, 其中每个元素分别表示最大块外接矩形的 (左上角x坐标, 左上角y坐标, 宽度, 高度)
     '''
     
-    # ---- 生成初始噪声
-    survival_value, dead_value = True, False
-    
-    blob_grid = blob_grid.map1d(lambda _,__: survival_value if random.random() < noise_probability else dead_value)
 
-    
+
+    survival_value, dead_value = -1, -2
     neighbor_cell_delta_list = [
         [-1,-1], [ 0,-1], [ 1,-1],
         [-1, 0],          [ 1, 0],
@@ -314,46 +314,162 @@ def _brogue_createBlobOnGrid(
     ]
     
     
-    # ---- 细胞自动机开始数轮迭代
-    for _ in range(round_count):
-
-        # 每轮迭代遍历并修改 blob_grid 所有格子
-        last_grid = blob_grid.copy()  # 记录上一轮迭代的最终结果, 接下来将就地修改blob_grid
-        for cell_x in blob_grid.width:
-            for cell_y in blob_grid.height:
-                
-                # 计算当前格子的周围中存在活细胞的数量
-                neighbor_survived_num = sum([                      
-                    1 for dx, dy in neighbor_cell_delta_list  
-                    if blob_grid.is_valid(cell_x + dx, cell_y + dy) and last_grid[cell_x + dx, cell_y + dy] == survival_value  # 遍历的坐标必须在grid之内, 也必须是活细胞
-                    ])
-                
-                
-                # 计算本轮迭代中该格子的细胞的命运
-                will_birth = \
-                    last_grid[cell_x, cell_y] == dead_value \
-                    and birth_parameters[neighbor_survived_num] == 't'
-                    
-                will_survive = \
-                    last_grid[cell_x, cell_y] == survival_value \
-                    and survival_parameters[neighbor_survived_num] == 't'
-                
-                will_die = not will_survive
-                
-                if will_birth:
-                    blob_grid[cell_x, cell_y] = survival_value
-                if will_survive:
-                    pass
-                if will_die:
-                    blob_grid[cell_x, cell_y] = dead_value
+    while True:
+        # ---- 生成初始噪声
+        for x in range(grid.width):
+            for y in range(grid.height):
+                if not grid.is_valid(x, y):
+                    continue
+                if random.random() < noise_probability:
+                    grid[x,y] = survival_value
+                else:
+                    grid[x,y] = dead_value
         
-    
-    blob_list = []
-    blob = {
-        "fill_value": 0,
-        "size": 0,
-    }
-    # TODO
+        # ---- 细胞自动机开始数轮迭代
+        for _ in range(round_count):
+
+            # 每轮迭代遍历并修改 blob_grid 所有格子
+            last_grid = grid.copy()  # 记录上一轮迭代的最终结果, 接下来将就地修改blob_grid
+            for cell_x in range(grid.width):
+                for cell_y in range(grid.height):
+                    
+                    # 计算当前格子的周围中存在活细胞的数量
+                    neighbor_survived_num = sum([                      
+                        1 for dx, dy in neighbor_cell_delta_list  
+                        if grid.is_valid(cell_x + dx, cell_y + dy) \
+                        and last_grid[cell_x + dx, cell_y + dy] == survival_value  # 遍历的坐标必须在grid之内, 也必须是活细胞
+                        ])
+                    
+                    
+                    # 计算本轮迭代中该格子的细胞的命运
+                    will_birth = \
+                        last_grid[cell_x, cell_y] == dead_value \
+                        and birth_parameters[neighbor_survived_num] == 't'
+                        
+                    will_survive = \
+                        last_grid[cell_x, cell_y] == survival_value \
+                        and survival_parameters[neighbor_survived_num] == 't'
+                    
+                    if will_birth:
+                        grid[cell_x, cell_y] = survival_value
+                    # if will_survive:
+                    #     pass
+                    if not will_survive:
+                        grid[cell_x, cell_y] = dead_value
+        
+        
+        now_id = 0  # 每个块的新填充值, 每找到一个块,就加一
+        blob_list = []  
+        # [
+        #     {
+        #         "id": int,
+        #         "size": int,
+        #     },
+        #     ...
+        # ]
+        
+        # 为每个块填上新的表示编号的填充值, 并记录每个块的尺寸
+        for x in range(grid.width):
+            for y in range(grid.height):
+                
+                # 剔除被赋予blob_id的格子, 以及细胞死亡的格子, 只留下细胞存活的, 没有被赋予blob_id的格子
+                # 注意: 每当一个块首次被遍历时, 它内部所有格子都将被赋予编号
+                if grid[x,y] != survival_value :
+                    continue 
+                
+                
+                fill_value = now_id
+                target_value = survival_value
+                blob_size = flood_fill(grid, fill_value, target_value, start_x=x, start_y=y)
+                blob_list.append(
+                    {
+                        "id": now_id,
+                        "size": blob_size,
+                    }
+                )
+                
+                now_id += 1
+        
+        
+        # 假如啥也没有生成, 就从头来过
+        if not blob_list:
+            continue
+        
+        # 下面开始计算最大的块的外接矩形
+        blob_size_list = []  # [size, size, ...]
+        for dic in blob_list:
+            blob_size_list.append(dic["size"])
+            
+        biggest_blob = {
+            "id": blob_size_list.index(max(blob_size_list)),
+            "size": max(blob_size_list),
+            "min_x": None,
+            "max_x": None,
+            "min_y": None,
+            "max_y": None,
+            "width": None,
+            "height": None
+        }
+        
+        scan_loops = [
+        #   outer loop                 inner loop          scan target      x,y/y,x
+            ((0, grid.height, 1), (grid.width,),  "min_y",         "y,x"),
+            ((0, grid.width, 1),  (grid.height,), "min_x",         "x,y"),
+            ((0, grid.height, -1),(grid.width,),  "max_y",         "y,x"),
+            ((0, grid.width, -1), (grid.height,), "max_x",         "x,y"),
+        ]
+        
+        # 从四个方向自外向内搜索块的边界
+        for outer_loop, inner_loop, scan_target, x_y in scan_loops:
+            print(outer_loop)
+            # 扫描线从grid的边缘开始向内推进
+            for scan_line_index in range(*outer_loop):
+                
+                # 遍历当前正在扫描的行或列
+                has_found_scan_target = False
+                for scan_cell_index in range(*inner_loop):
+                    
+                    # 确定正在扫描的格子坐标
+                    if x_y == "x,y":
+                        x, y = scan_line_index, scan_cell_index
+                    else:
+                        y, x = scan_line_index, scan_cell_index
+                    
+                    # if scan_target == 'min_x':
+                    #     print(y,x)
+                    
+                    # 首次发现时记录当前的扫描线的推进距离 scan_line 这就是块的边界
+                    if grid[x, y] == biggest_blob["id"]:
+                        biggest_blob[scan_target] = scan_line_index
+                        has_found_scan_target = True
+                        break
+                
+                # 首次发现块后, 结束当前方向上的扫描
+                if has_found_scan_target:
+                    break
+            
+        
+        # 计算规格
+        print(biggest_blob)
+        biggest_blob["width"] = biggest_blob["max_x"] - biggest_blob["min_x"] + 1
+        biggest_blob["height"] = biggest_blob["max_y"] - biggest_blob["min_y"] + 1
+        
+        # 检测是否满足对块的规格限制
+        if (blob_min_width <= biggest_blob['width'] <= blob_max_width)  and  (blob_min_height < biggest_blob['height'] <= blob_max_height):
+            
+            # 设置最大块之外的地方填充为0, 并设置最大块的填充值为1
+            for x in range(grid.width):
+                for y in range(grid.height):
+                    if grid[x, y] == biggest_blob['id']:
+                        grid[x, y] = 1
+                    else:
+                        grid[x, y] = 0
+            
+            # 终止外层while循环, 返回最大块的信息
+            return (biggest_blob["min_x"], biggest_blob["min_y"], biggest_blob["width"], biggest_blob["height"])
+        
+        
+
 
 
 # ------------------------------------------------------------------TODO

@@ -26,7 +26,7 @@ def _random_selection(original_list, ratio):
     return list(selected_elements)
 
 
-def print_grid(grid: array2d, symbols: str = ".+#", message="------------------------"):
+def print_grid(grid:array2d, symbols: str = ".+#", message="------------------------"):
     symbols = list(symbols)
     frequency_dict = {}
 
@@ -53,8 +53,11 @@ def print_grid(grid: array2d, symbols: str = ".+#", message="-------------------
     for key, value in symbol_tuples:
         symbol_dict[key] = value
 
+    def replace_element_with_symbol(element):
+        return symbol_dict[element]
+
     print(message)
-    grid.map(symbol_dict.__getitem__).draw(width=2)
+    grid.copy().map(replace_element_with_symbol).draw(width=2)
 
 
 def test_all_rooms(
@@ -139,7 +142,8 @@ def test_all_rooms(
             else:
                 passing_scale[w, h] = "X"
 
-        print(f"\t average: {avg_time_sum / avg_time_count} s")
+        avg_time = avg_time_sum / avg_time_count
+        print(f"\t average: {avg_time:.6f} s")
         if all_scales_passed:
             print("\t passed")
         else:
