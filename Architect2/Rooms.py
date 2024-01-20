@@ -7,6 +7,47 @@ from . import SimpleShapes
 
 def fill_grid(grid: array2d, value=0):
     SimpleShapes.draw_rectangle(grid, value, 0, 0, grid.width, grid.height)
+    
+    
+
+def flood_fill(grid: array2d, fill_value, target_value, start_x:int=0, start_y:int=0):
+    '''
+    从指定位置开始向四边填充, 将值为 target_value 的格子填充为 fill_value 最终返回填充的总面积 
+
+    参数列表:
+        grid:
+            将对该网格就地填充和修改
+        fill_value:
+            填充的值
+        target_value:
+            只有值为 target_value 的格子才会被填充并计算面积
+        start_x:
+            开始填充的横坐标
+        start_y:
+            开始填充的纵坐标
+    '''
+    filled_cell_count = 0
+    if grid[start_x, start_y] != target_value:
+        return filled_cell_count
+    filled_cell_count += _flood_fill_inner_func(grid, fill_value, target_value, start_x, start_y)
+    return filled_cell_count
+
+def _flood_fill_inner_func(grid: array2d, fill_value, target_value, start_x: int = 0, start_y: int = 0):
+    filled_cell_count = 0
+    grid[start_x, start_y] = fill_value
+    edge_neighbor_pos_list = [
+        [start_x, start_y + 1],
+        [start_x, start_y - 1],
+        [start_x + 1, start_y],
+        [start_x - 1, start_y],
+    ]
+    for next_x, next_y in edge_neighbor_pos_list:
+        if not grid.is_valid(next_x, next_y):
+            break
+        if grid[next_x, next_y] == target_value:
+            filled_cell_count += _flood_fill_inner_func(grid, fill_value, target_value, next_x, next_y)
+    
+    return filled_cell_count + 1  # 将递归结果添加到 filled_cell_count 中并返回
 
 def brogue_designCircularRoom(grid: array2d):
     '''
@@ -61,7 +102,7 @@ def brogue_designCrossRoom(grid: array2d):
     '''
     在房间偏左下的位置生成两个矩形交叉而成的房间
     '''
-    assert grid.width >= 41 and grid.height >= 15
+    assert grid.width >= 30 and grid.height >= 15
     fill_grid(grid, value=0)  # 以0填充所有的格子
 
     # 确定两个房间的x坐标和宽度
@@ -135,7 +176,7 @@ def brogue_designChunkyRoom(grid: array2d):
     '''
     生成若干连续的小圆(下面称作chunk)拼成的房间, 首个圆生成在grid中央
     '''
-    assert grid.width >= 23 and grid.height >= 23
+    assert grid.width >= 14 and grid.height >= 15
     
     fill_grid(grid, value=0)  # 以0填充所有的格子
 
@@ -180,7 +221,7 @@ def brogue_designChunkyRoom(grid: array2d):
         SimpleShapes.draw_circle(grid, fill_value, circle['x'], circle['y'], radius)
 
 
-def brogue_designEntranceRoom(grid):
+def brogue_designEntranceRoom(grid: array2d):
     assert grid.width >= 22 and grid.height >= 12 
     
     fill_grid(grid, value=0)
@@ -202,25 +243,128 @@ def brogue_designEntranceRoom(grid):
 
 
 
-# ----------- _brogue_designCavern 为原作函数, 其余为
-def _brogue_designCavern(grid, blob_min_width, blob_max_width, blob_minHeight, blob_maxHeight):
+# ----------- _brogue_designCavern 为原作函数
+def _brogue_designCavern(
+    grid: array2d,      
+    min_width: int,  # 房间的生成限宽和限高
+    max_width: int, 
+    min_height: int, 
+    max_height: int \
+    ):
     '''
     使用元胞自动机生成限定规格的一块洞穴
     '''
     fill_grid(grid, 0)
     
-    pass
+    blob_grid = array2d(max_width, max_height, default=None)
+    round_count = 5
+    _brogue_createBlobOnGrid(blob_grid, round_count, min_width, max_width, min_height, max_height)
+    # TODO
+
+
+# _brogue_designCavern 的一部分, 用于构造房间, _brogue_designCavern会将该房间插入到大的grid
+def _brogue_createBlobOnGrid(
+    blob_grid: array2d, 
+    round_count: int,  
+    blob_min_width: int, 
+    blob_max_width: int, 
+    blob_min_height: int,  
+    blob_max_height: int,  
+    noise_probability = 0.55, 
+    birth_parameters = 'ffffffttt',  
+    survival_parameters = 'ffffttttt' \
+    ):
+    '''
+    本函数利用细胞自动机按照培育参数在给定的空网格之内生成图案, 并返回最大的块在网格中的位置和规格
     
+    参数列表:
+        blob_grid:  
+            用于培育块的网格
+        round_count:  
+            细胞自动机的迭代次数
+        blob_min_width:  
+            用于限制块的规格
+        blob_max_width:  
+            用于限制块的规格
+        blob_min_height:  
+            用于限制块的规格
+        blob_max_height:   
+            用于限制块的规格
+        noise_probability = 0.55 :
+            初始噪声的生成率 
+        birth_parameters = 'ffffffttt' :
+            长度为9的字符串, 表示当前格子附近3x3区域内存在index个细胞时, birth_parameters[index]的值(t/f)将决定本格子是否在下一轮迭代时生成细胞, 或使本格子细胞存活
+        survival_parameters = 'ffffttttt' :
+            同上, 假如本格子不会诞生新细胞, 那么这个参数将判定周围细胞的密度以决定下一轮迭代时本格子的细胞是否会被销毁, 't'表示存活, 'f'表示销毁
+    
+    返回值:
+        四元组, 其中每个元素分别表示最大块外接矩形的 (左上角x坐标, 左上角y坐标, 宽度, 高度)
+    '''
+    
+    # ---- 生成初始噪声
+    survival_value, dead_value = True, False
+    
+    blob_grid = blob_grid.map1d(lambda _,__: survival_value if random.random() < noise_probability else dead_value)
+
+    
+    neighbor_cell_delta_list = [
+        [-1,-1], [ 0,-1], [ 1,-1],
+        [-1, 0],          [ 1, 0],
+        [-1, 1], [ 0, 1], [ 1, 1]
+    ]
+    
+    
+    # ---- 细胞自动机开始数轮迭代
+    for _ in range(round_count):
+
+        # 每轮迭代遍历并修改 blob_grid 所有格子
+        last_grid = blob_grid.copy()  # 记录上一轮迭代的最终结果, 接下来将就地修改blob_grid
+        for cell_x in blob_grid.width:
+            for cell_y in blob_grid.height:
+                
+                # 计算当前格子的周围中存在活细胞的数量
+                neighbor_survived_num = sum([                      
+                    1 for dx, dy in neighbor_cell_delta_list  
+                    if blob_grid.is_valid(cell_x + dx, cell_y + dy) and last_grid[cell_x + dx, cell_y + dy] == survival_value  # 遍历的坐标必须在grid之内, 也必须是活细胞
+                    ])
+                
+                
+                # 计算本轮迭代中该格子的细胞的命运
+                will_birth = \
+                    last_grid[cell_x, cell_y] == dead_value \
+                    and birth_parameters[neighbor_survived_num] == 't'
+                    
+                will_survive = \
+                    last_grid[cell_x, cell_y] == survival_value \
+                    and survival_parameters[neighbor_survived_num] == 't'
+                
+                will_die = not will_survive
+                
+                if will_birth:
+                    blob_grid[cell_x, cell_y] = survival_value
+                if will_survive:
+                    pass
+                if will_die:
+                    blob_grid[cell_x, cell_y] = dead_value
+        
+    
+    blob_list = []
+    blob = {
+        "fill_value": 0,
+        "size": 0,
+    }
+    # TODO
 
 
-def brogue_design_compat_cavern(grid):
-    _brogue_designCavern(grid, 3, 12, 4, 8)
+# ------------------------------------------------------------------TODO
+# def brogue_design_compat_cavern(grid: array2d):
+#     _brogue_designCavern(grid, 3, 12, 4, 8)
 
-def brogue_design_large_north_south_cavern(grid):
-    _brogue_designCavern(grid, 3, 12, 15, grid.height-2)
+# def brogue_design_large_north_south_cavern(grid: array2d):
+#     _brogue_designCavern(grid, 3, 12, 15, grid.height-2)
 
-def brogue_design_large_east_west_cavern(grid):
-    _brogue_designCavern(grid, 20, grid.height-2, 4, 8)
+# def brogue_design_large_east_west_cavern(grid: array2d):
+#     _brogue_designCavern(grid, 20, grid.height-2, 4, 8)
 
-def brogue_design_min_cavern(grid):
-    _brogue_designCavern(grid, 50, grid.width-2, 20, grid.height-2)
+# def brogue_design_min_cavern(grid: array2d):
+#     _brogue_designCavern(grid, 50, grid.width-2, 20, grid.height-2)

@@ -1,6 +1,6 @@
 from array2d import array2d
 from Architect2 import SimpleShapes, Rooms
-import test_tools 
+import test_tools
 
 
 # SimpleShapes
@@ -18,6 +18,12 @@ SimpleShapes.draw_circle(grid, 1, 5, 5, 2)
 test_tools.print_grid(grid)
 
 # Rooms
+grid = array2d(30, 30, 0)
+SimpleShapes.draw_circle(grid, 1, 15, 15, 4)
+size = Rooms.flood_fill(grid, 2, 1, 15, 15)
+print("fill_size =" ,size)
+print(grid)
+assert size == 61
 
 grid = array2d(41, 30, 0)
 
@@ -42,6 +48,12 @@ Rooms.brogue_designSmallRoom(grid)
 test_tools.print_grid(grid)
 
 
-# check functions' accuracy in Rooms 
-test_tools.test_all_rooms(test_count=100, selection_ratio=0.1, grid_width_range=(0,50), grid_height_range=(0,50))
-
+# check functions' accuracy in Rooms
+test_tools.test_all_rooms(
+    # selected_func_name=["brogue_designCrossRoom", "brogue_designChunkyRoom"],
+    test_count=10,
+    selection_ratio=0.3,
+    grid_width_range=(0, 50),
+    grid_height_range=(0, 50),
+    ignore_assertion_error=True,
+)

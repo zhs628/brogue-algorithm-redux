@@ -11,8 +11,8 @@ def draw_circle(grid: array2d, value, center_x: int, center_y: int, radius) -> N
     
     for x in x_scan_range:
         for y in y_scan_range:
-            # if not grid.is_valid(x,y):
-            #     continue
+            if not grid.is_valid(x,y):
+                continue
             is_in_circle = (x-center_x)*(x-center_x) + (y-center_y)*(y-center_y) < radius * radius + radius
             if is_in_circle:
                 grid[x, y] = value
@@ -26,7 +26,7 @@ def draw_rectangle(grid: array2d, value, conor_x: int, conor_y: int, width: int,
     
     for x in x_scan_range:
         for y in y_scan_range:
-            # if not grid.is_valid(x,y):
-            #     continue
+            if not grid.is_valid(x,y):
+                continue
             grid[x, y] = value
 

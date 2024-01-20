@@ -65,7 +65,8 @@ def test_all_rooms(
     grid_height_range=None,
     selection_ratio=0.1,
     print_exception=False,
-    ignore_assertion_error=True\
+    ignore_assertion_error=True,
+    selected_func_name = None \
 ):
     # 为了保证算法的正确性, 可以使用本测试函数来覆盖所有可能的参数值
     # 待测函数的通过率视图的每个点(x,y)表示该次测试传入的grid是 array2d(x,y)
@@ -82,15 +83,22 @@ def test_all_rooms(
 
     print(f"---- Testing functions in Architect2.Rooms  (ignore_assertion_error={ignore_assertion_error})")
 
+    selected_func_name = selected_func_name or ['brogue']
+    
     function_list = [
         (name, obj) \
         for name, obj in Rooms.__dict__.items() \
-        if "design" in name and not name.startswith('_') \
+        if "design" in name and not name.startswith('_') and (sum([int(sub_name in name) for sub_name in selected_func_name])) \
     ]
-
+    
+    print('\t Will test:')
+    print('\t\t ' + '\n\t\t '.join([name for name, _ in function_list]))
+    print()
+    
     all_func_passed = True
-    for name, func in function_list:
-        print(f"\t Testing: {name}")
+    for i, func_tuple in enumerate(function_list):
+        name, func = func_tuple
+        print(f"\t---- Testing: {name} ({i+1}/{len(function_list)})")
 
         passing_scale = array2d(
             grid_width_range[1] + 1, grid_height_range[1] + 1, default=" "
@@ -126,10 +134,10 @@ def test_all_rooms(
                 passing_scale[w, h] = "X"
 
         if all_scales_passed:
-            print("\t\t passed")
+            print("\t passed")
         else:
             if all_scales_failed:
-                print(f"\t\\t All tests failed!")
+                print(f"\t\t All tests failed!")
             else:
                 print(f"\t\t Some test cases failed!")
             s1 = (str(' '.join([str(num)[-1] for num in range(passing_scale.width)])) + '\n \n' + _grid_draw_str(passing_scale))
