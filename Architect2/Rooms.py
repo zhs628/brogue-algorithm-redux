@@ -2,6 +2,10 @@ from array2d import array2d
 import random
 from . import SimpleShapes
 
+# 使用全局常量来表示格子的填充值，方便以后统一修改
+ONE = 1
+ZERO = 0
+
 # 在本文件中, 完全复刻自brogue的算法将使用 "brogue_<brogue中该函数的原名>" 命名
 def flood_fill(grid: array2d[int], fill_value, target_value, start_x=0, start_y=0):
     '''
@@ -64,13 +68,12 @@ def brogue_designCircularRoom(grid: array2d[int]):
         room_radius = random.randint(2, 4)
     
     # 绘制房间
-    SimpleShapes.draw_circle(grid, 1, center_x, center_y, room_radius)
+    SimpleShapes.draw_circle(grid, ONE, center_x, center_y, room_radius)
     
     # 绘制房间中的空洞
     if room_radius > 6 and random.random() < 0.5:
         hole_radius = random.randint(3, room_radius-3)
-        fill_value = 0
-        SimpleShapes.draw_circle(grid, fill_value, center_x, center_y, hole_radius)
+        SimpleShapes.draw_circle(grid, ZERO, center_x, center_y, hole_radius)
 
 
 def brogue_designSmallRoom(grid: array2d[int]):
@@ -88,7 +91,7 @@ def brogue_designSmallRoom(grid: array2d[int]):
     room_x = (grid.width - room_width) // 2  # 确保房间的中心和grid中心对齐
     room_y = (grid.height - room_height) // 2
     
-    SimpleShapes.draw_rectangle(grid, 1, room_x, room_y, room_width, room_height)
+    SimpleShapes.draw_rectangle(grid, ONE, room_x, room_y, room_width, room_height)
     
     
 def brogue_designCrossRoom(grid: array2d[int]):
@@ -130,8 +133,8 @@ def brogue_designCrossRoom(grid: array2d[int]):
     room2_y += 5
     
     # 绘制
-    SimpleShapes.draw_rectangle(grid, 1, room1_x, room1_y, room1_width, room1_height)
-    SimpleShapes.draw_rectangle(grid, 1, room2_x, room2_y, room2_width, room2_height)
+    SimpleShapes.draw_rectangle(grid, ONE, room1_x, room1_y, room1_width, room1_height)
+    SimpleShapes.draw_rectangle(grid, ONE, room2_x, room2_y, room2_width, room2_height)
 
 
 def brogue_designSymmetricalCrossRoom(grid: array2d[int]):
@@ -158,8 +161,8 @@ def brogue_designSymmetricalCrossRoom(grid: array2d[int]):
     room2_y = (grid.height - room2_height) // 2
     
     # 绘制
-    SimpleShapes.draw_rectangle(grid, 1, room1_x, room1_y, room1_width, room1_height)
-    SimpleShapes.draw_rectangle(grid, 1, room2_x, room2_y, room2_width, room2_height)
+    SimpleShapes.draw_rectangle(grid, ONE, room1_x, room1_y, room1_width, room1_height)
+    SimpleShapes.draw_rectangle(grid, ONE, room2_x, room2_y, room2_width, room2_height)
 
 
 def brogue_designChunkyRoom(grid: array2d[int]):
@@ -182,7 +185,7 @@ def brogue_designChunkyRoom(grid: array2d[int]):
         'next_min_y': grid.height // 2 - 3,
         'next_max_y': grid.height // 2 + 3,
     }
-    SimpleShapes.draw_circle(grid, 1, last_circle['x'], last_circle['y'], radius)
+    SimpleShapes.draw_circle(grid, ONE, last_circle['x'], last_circle['y'], radius)
     
     for _ in range(chunk_count):
         # 确定圆的位置, 必须让所有的圆的圆心落在已绘制的区域上
@@ -206,7 +209,7 @@ def brogue_designChunkyRoom(grid: array2d[int]):
         last_circle = circle
 
         #绘制
-        SimpleShapes.draw_circle(grid, 1, circle['x'], circle['y'], radius)
+        SimpleShapes.draw_circle(grid, ONE, circle['x'], circle['y'], radius)
 
 
 def brogue_designEntranceRoom(grid: array2d[int]):
@@ -223,9 +226,8 @@ def brogue_designEntranceRoom(grid: array2d[int]):
     room2_x = grid.width // 2 - room2_width // 2 - 1
     room2_y = grid.height - room2_height - 2
 
-    fill_value = 1
-    SimpleShapes.draw_rectangle(grid, fill_value, room1_x, room1_y, room1_width, room1_height)
-    SimpleShapes.draw_rectangle(grid, fill_value, room2_x, room2_y, room2_width, room2_height)
+    SimpleShapes.draw_rectangle(grid, ONE, room1_x, room1_y, room1_width, room1_height)
+    SimpleShapes.draw_rectangle(grid, ONE, room2_x, room2_y, room2_width, room2_height)
 
 
 # ----------- _brogue_designCavern 为原作函数

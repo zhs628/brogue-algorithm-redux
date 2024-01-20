@@ -28,7 +28,6 @@ def _random_selection(original_list, ratio):
 
 
 def print_grid(grid: array2d[int], symbols=".+#", message="------------------------"):
-    symbols = list(symbols)
     counter = defaultdict(int)
 
     for x in range(grid.width):
@@ -56,7 +55,7 @@ def test_all_rooms(
     selection_ratio=0.1,
     print_exception=False,
     ignore_assertion_error=True,
-    selected_func_name = None \
+    selected_func_name=None \
 ):
     # 为了保证算法的正确性, 可以使用本测试函数来覆盖所有可能的参数值
     # 待测函数的通过率视图的每个点(x,y)表示该次测试传入的grid是 array2d(x,y)
@@ -118,7 +117,7 @@ def test_all_rooms(
                         if not ignore_assertion_error:
                             raise Exception("AssertionError")
                     all_scales_failed = False
-                except Exception as e:
+                except Exception:
                     if print_exception:
                         traceback.print_exc()
                     passed = False
@@ -126,10 +125,7 @@ def test_all_rooms(
                     all_func_passed = False
                     break
 
-            if passed:
-                passing_scale[w, h] = "·"
-            else:
-                passing_scale[w, h] = "X"
+            passing_scale[w, h] = "·" if passed else "X"
 
         avg_time = avg_time_sum / avg_time_count
         print(f"\t average: {avg_time:.6f} s")
