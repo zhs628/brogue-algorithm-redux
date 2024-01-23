@@ -60,6 +60,36 @@ def print_grid(grid:array2d, symbols: str = ".+#", message="--------------------
     grid.copy().map(replace_element_with_symbol).draw(width=2)
 
 
+
+def _test(args):
+    w,h, func, test_count, ignore_assertion_error, print_exception = args
+    passed_set = True
+    avg_time_count_add = 0
+    avg_time_sum_add = 0
+    all_scales_passed_set = True
+    all_scales_failed_set = True
+    for i in range(test_count):
+        try:
+            try:
+                start_time = time.time()
+                func(array2d(w, h))
+                end_time = time.time()
+                avg_time_count_add += 1
+                avg_time_sum_add += end_time - start_time
+                all_scales_failed_set = False
+            except AssertionError:
+                if not ignore_assertion_error:
+                    raise Exception("AssertionError")
+            all_scales_failed_set = False
+        except Exception as e:
+            if print_exception:
+                traceback.print_exc()
+            passed_set = False
+            all_scales_passed_set = False
+            break
+    return passed_set, avg_time_count_add, avg_time_sum_add, all_scales_passed_set, all_scales_failed_set
+
+
 def test_all_rooms(
     test_count=30,
     grid_width_range=None,
@@ -67,7 +97,8 @@ def test_all_rooms(
     selection_ratio=0.1,
     print_exception=False,
     ignore_assertion_error=True,
-    selected_func_name = None \
+    selected_func_name=None,
+    mulity_process_count=None \
 ):
     # 为了保证算法的正确性, 可以使用本测试函数来覆盖所有可能的参数值
     # 待测函数的通过率视图的每个点(x,y)表示该次测试传入的grid是 array2d(x,y)
@@ -76,6 +107,8 @@ def test_all_rooms(
     # passed: "·"
     # failed: "×"
     # not tested: " "
+    
+
     
     grid_width_range = grid_width_range or (15, 40)
     grid_height_range = grid_height_range or (15, 40)
@@ -100,8 +133,7 @@ def test_all_rooms(
     for i, func_tuple in enumerate(function_list):
         name, func = func_tuple
         
-        avg_time_sum = 0
-        avg_time_count = 0
+
         
         print(f"\t---- Testing: {name} ({i+1}/{len(function_list)})")
 
@@ -109,41 +141,52 @@ def test_all_rooms(
             grid_width_range[1] + 1, grid_height_range[1] + 1, default=" "
         )
 
-        all_scales_passed = True
-        all_scales_failed = True
-        result = []
+
+        args = []
         for w in range(grid_width_range[0], grid_width_range[1] + 1):
             for h in range(grid_height_range[0], grid_height_range[1] + 1):
-                result.append((w, h))
-        for w, h in _random_selection(result, selection_ratio):
-            passed = True
-            for i in range(test_count):
-                try:
-                    try:
-                        start_time = time.time()
-                        func(array2d(w, h))
-                        end_time = time.time()
-                        avg_time_count += 1
-                        avg_time_sum += end_time - start_time
-                    except AssertionError:
-                        if not ignore_assertion_error:
-                            raise Exception("AssertionError")
-                    all_scales_failed = False
-                except Exception as e:
-                    if print_exception:
-                        traceback.print_exc()
-                    passed = False
-                    all_scales_passed = False
-                    all_func_passed = False
-                    break
+                args.append((w, h, func, test_count, ignore_assertion_error, print_exception))
 
+        
+        args = _random_selection(args, selection_ratio)
+        if mulity_process_count is not None:
+            from tqdm import tqdm
+            import multiprocessing
+            with multiprocessing.Pool(mulity_process_count) as p:
+                res_list = list(tqdm(p.imap(_test, args), total=len(args)))
+            
+        else:
+            res_list = []
+            for arg in args:
+                res_list.append(_test(arg))
+
+        avg_time_sum = 0
+        avg_time_count = 0
+        all_scales_passed = True
+        all_scales_failed = True
+        for i, arg in enumerate(args):
+            w,h, func, test_count, ignore_assertion_error, print_exception = arg
+            
+            passed, avg_time_count_add, avg_time_sum_add, all_scales_passed_set, all_scales_failed_set = res_list[i]
+            
             if passed:
                 passing_scale[w, h] = "·"
             else:
                 passing_scale[w, h] = "X"
+            
+            avg_time_count += avg_time_count_add
+            avg_time_sum += avg_time_sum_add
+            
+            if all_scales_passed:
+                all_scales_passed = all_scales_passed_set
+            if all_scales_failed:
+                all_scales_failed = all_scales_failed_set
 
-        avg_time = avg_time_sum / avg_time_count
-        print(f"\t average: {avg_time:.6f} s")
+        if avg_time_count > 0:
+            avg_time = avg_time_sum / avg_time_count
+            print(f"\t average: {avg_time:.6f} s")
+        else:
+            print(f"\t average: N/A")
         if all_scales_passed:
             print("\t passed")
         else:

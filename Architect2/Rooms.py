@@ -5,10 +5,37 @@ from . import SimpleShapes
 
 # 在本文件中, 完全复刻自brogue的算法将使用 "brogue_<brogue中该函数的原名>" 命名
 
-def fill_grid(grid: array2d, value=0):
-    SimpleShapes.draw_rectangle(grid, value, 0, 0, grid.width, grid.height)
-    
-    
+def insert_room_to_grid(grid: array2d, room_grid: array2d, delta_x:int, delta_y:int, start_x:int, start_y:int):
+    '''
+    复制room_grid的一个相连的图案到grid中, 在room_grid中的点(x,y)将通过(x + delta_x, y + delta_y)映射到grid中
+    设置start_x, start_y来选择room_grid中将被复制的相连图案的任意内点
+    '''
+    fill_value = room_grid[start_x, start_y]
+    grid[start_x+delta_x, start_y+delta_y] = fill_value
+    edge_neighbor_pos_list = [
+        [start_x, start_y + 1],
+        [start_x, start_y - 1],
+        [start_x + 1, start_y],
+        [start_x - 1, start_y],
+    ]
+    # 注意循环变量所指代的那个坐标一直都是在room_grid中的点
+    for next_x, next_y in edge_neighbor_pos_list:
+        
+        # 判断下一个点是否在room_grid中
+        if not room_grid.is_valid(next_x, next_y):
+            continue
+        # 判断下一个点的目标点是否在grid中
+        if not grid.is_valid(next_x+delta_x, next_y+delta_y):
+            continue
+        # 判断下一个点的目标点是否是已被复制的点
+        if grid[next_x+delta_x, next_y+delta_y] == fill_value:
+            continue
+        
+        if room_grid[next_x, next_y] == fill_value:
+            insert_room_to_grid(grid, room_grid, delta_x, delta_y, next_x, next_y)
+
+
+
 
 def flood_fill(grid: array2d, fill_value, target_value, start_x:int=0, start_y:int=0):
     '''
@@ -240,10 +267,28 @@ def brogue_designEntranceRoom(grid: array2d):
     SimpleShapes.draw_rectangle(grid, fill_value, room2_x, room2_y, room2_width, room2_height)
     
 
+# ---------------------------------洞穴---------------------------------
+# 关于洞穴的生成算法, 程序将不断尝试在max_width, max_height内随机生成块, 而直到块的规格符合要求时才会停止
+# 根据经验, 它们的规格多数集中在max_width/2, max_height/2附近, 因此当块的下限min_width, min_height大于max_width/2, max_height/2时, 将很难在短时间内生成洞穴
+# 因此对于下列预设的函数, 传入的grid的规格需要尽可能大(我已经基于大量测试设定了合适的assert限制), 以防止生成速度变慢, 甚至是超出1000次的重新生成限制报AssertionError
+
+def brogue_design_compat_cavern(grid: array2d):
+    _brogue_designCavern(grid, 3, 12, 4, 8)
+
+def brogue_design_large_north_south_cavern(grid: array2d):
+    assert grid.width >= 4 and grid.height >= 18
+    _brogue_designCavern(grid, 3, 12, 15, grid.height-2)
+
+def brogue_design_large_east_west_cavern(grid: array2d):
+    assert grid.width >= 22 and grid.height >= 22
+    _brogue_designCavern(grid, 20, grid.height-2, 4, 8)
+
+def brogue_design_cave(grid: array2d):
+    assert grid.width >= 65 and grid.height >= 54
+    _brogue_designCavern(grid, 50, grid.width-2, 20, grid.height-2)
 
 
-
-# ----------- _brogue_designCavern 为原作函数
+# ----------- _brogue_designCavern 为原作函数, 以上为原作中调用该函数的四个地方
 def _brogue_designCavern(
     grid: array2d,      
     min_width: int,  # 房间的生成限宽和限高
@@ -256,13 +301,33 @@ def _brogue_designCavern(
     '''
     grid.fill_(0)
     
-    blob_grid = array2d(max_width, max_height, default=None)
-    round_count = 5
+    blob_grid = array2d(grid.width, grid.height, default=None)  # 用来生成块的网格, 规格与grid一致
+    round_count = 2  # 当它被设定地很高时, 生成将非常耗时, 当它越大, 房间越大,但是边缘越粗糙, 反之, 当它越小,房间越小,边缘越光滑
     noise_probability = 0.55
     birth_parameters = "ffffffttt"
     survival_parameters = "ffffttttt"
-    _brogue_createBlobOnGrid(blob_grid, min_width, max_width, min_height, max_height, round_count, noise_probability, birth_parameters, survival_parameters)
-    # TODO
+    blob_x, blob_y, blob_w, blob_h = _brogue_createBlobOnGrid(blob_grid, min_width, max_width, min_height, max_height, round_count, noise_probability, birth_parameters, survival_parameters)
+    
+    
+    # 下面将生成的块从blob_grid中复制到grid中
+    
+    # 遍历块的外接矩形, 寻找块中的一个内点
+    inside_x, inside_y = None, None
+    for y in range(blob_y, blob_y + blob_h):
+        has_found = False
+        for x in range(blob_x, blob_x + blob_w):
+            if blob_grid[x,y] == 1:
+                inside_x, inside_y = x, y
+                has_found = True
+                break
+        if has_found:
+            break
+    
+    # 移动块的中心点到grid的中心点
+    delta_x = (grid.width - blob_w)//2 - blob_x
+    delta_y = (grid.height - blob_h)//2 - blob_y
+    insert_room_to_grid(grid, blob_grid, delta_x, delta_y, inside_x, inside_y)
+
 
 
 # _brogue_designCavern 的一部分, 用于构造房间, _brogue_designCavern会将该房间插入到大的grid
@@ -468,7 +533,7 @@ def _brogue_createBlobOnGrid(
                         grid[x, y] = 0
             
             # 终止外层while循环, 返回最大块的信息
-            print("loop_count:", loop_count)
+            # print("loop_count:", loop_count)
             return (biggest_blob["min_x"], biggest_blob["min_y"], biggest_blob["width"], biggest_blob["height"])
         
         # else:
@@ -477,15 +542,3 @@ def _brogue_createBlobOnGrid(
 
 
 
-# ------------------------------------------------------------------TODO
-# def brogue_design_compat_cavern(grid: array2d):
-#     _brogue_designCavern(grid, 3, 12, 4, 8)
-
-# def brogue_design_large_north_south_cavern(grid: array2d):
-#     _brogue_designCavern(grid, 3, 12, 15, grid.height-2)
-
-# def brogue_design_large_east_west_cavern(grid: array2d):
-#     _brogue_designCavern(grid, 20, grid.height-2, 4, 8)
-
-# def brogue_design_min_cavern(grid: array2d):
-#     _brogue_designCavern(grid, 50, grid.width-2, 20, grid.height-2)
