@@ -8,27 +8,27 @@ if __name__ == '__main__':
 
     # SimpleShapes
 
-    grid = array2d(20, 10, 0)
+    grid = array2d(20, 10, default=0)
 
     SimpleShapes.draw_rectangle(grid, 1, 5, 5, 2, 3)
 
     test_tools.print_grid(grid)
 
-    grid = array2d(20, 10, 0)
+    grid = array2d(20, 10, default=0)
 
     SimpleShapes.draw_circle(grid, 1, 5, 5, 2)
 
     test_tools.print_grid(grid)
 
     # Rooms
-    grid = array2d(30, 30, 0)
+    grid = array2d(30, 30, default=0)
     SimpleShapes.draw_circle(grid, 1, 15, 15, 4)
     size = Rooms.flood_fill(grid, 2, 1, 15, 15)
     print("fill_size =" ,size)
     print(grid)
     assert size == 61
 
-    grid = array2d(41, 30, 0)
+    grid = array2d(41, 30, default=0)
 
     Rooms.brogue_designCircularRoom(grid)
 
@@ -100,3 +100,4 @@ if __name__ == '__main__':
         #     ignore_assertion_error=True,
         #     mulity_process_count=16
         # )
+

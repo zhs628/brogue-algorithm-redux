@@ -4,6 +4,7 @@ from array2d import array2d
 import traceback
 import random
 import time
+from collections import defaultdict
 
 def _grid_draw_str(grid):
     line_list = []
@@ -26,38 +27,25 @@ def _random_selection(original_list, ratio):
     return list(selected_elements)
 
 
-def print_grid(grid:array2d, symbols: str = ".+#", message="------------------------"):
-    symbols = list(symbols)
-    frequency_dict = {}
+def print_grid(grid: array2d[int], symbols=".+#", message="------------------------"):
+    counter = defaultdict(int)
 
     for x in range(grid.width):
         for y in range(grid.height):
-            element = grid[x, y]
-            if element in frequency_dict:
-                frequency_dict[element] += 1
-            else:
-                frequency_dict[element] = 1
+            counter[grid[x, y]] += 1
 
     sorted_elements = sorted(
-        frequency_dict, key=lambda x: frequency_dict[x], reverse=True
+        counter, key=lambda x: counter[x], reverse=True
     )
-    symbol_tuples = [
-        (
-            sorted_elements[i] if i < len(sorted_elements) else None,
-            symbols[i] if i < len(symbols) else sorted_elements[i],
-        )
-        for i in range(max(len(sorted_elements), len(symbols)))
-    ]
 
     symbol_dict = {}  # {element: symbol}
-    for key, value in symbol_tuples:
+    for i in range(max(len(sorted_elements), len(symbols))):
+        key = sorted_elements[i] if i < len(sorted_elements) else None
+        value = symbols[i] if i < len(symbols) else sorted_elements[i]
         symbol_dict[key] = value
 
-    def replace_element_with_symbol(element):
-        return symbol_dict[element]
-
     print(message)
-    grid.copy().map(replace_element_with_symbol).draw(width=2)
+    grid.map(symbol_dict.__getitem__).draw(width=2)
 
 
 

@@ -1,2 +1,1 @@
-
-main.exe main.py
+pkpy.exe main.py

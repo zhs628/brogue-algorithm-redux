@@ -2,6 +2,9 @@ from array2d import array2d
 import random
 from . import SimpleShapes
 
+# 使用全局常量来表示格子的填充值，方便以后统一修改
+ONE = 1
+ZERO = 0
 
 # 在本文件中, 完全复刻自brogue的算法将使用 "brogue_<brogue中该函数的原名>" 命名
 
@@ -37,7 +40,7 @@ def insert_room_to_grid(grid: array2d, room_grid: array2d, delta_x:int, delta_y:
 
 
 
-def flood_fill(grid: array2d, fill_value, target_value, start_x:int=0, start_y:int=0):
+def flood_fill(grid: array2d[int], fill_value, target_value, start_x=0, start_y=0):
     '''
     从指定位置开始向四边填充, 将值为 target_value 的格子填充为 fill_value 最终返回填充的总面积 
 
@@ -59,7 +62,8 @@ def flood_fill(grid: array2d, fill_value, target_value, start_x:int=0, start_y:i
     filled_cell_count += _flood_fill_inner_func(grid, fill_value, target_value, start_x, start_y)
     return filled_cell_count
 
-def _flood_fill_inner_func(grid: array2d, fill_value, target_value, start_x: int = 0, start_y: int = 0):
+
+def _flood_fill_inner_func(grid: array2d[int], fill_value, target_value, start_x: int = 0, start_y: int = 0):
     filled_cell_count = 0
     grid[start_x, start_y] = fill_value
     edge_neighbor_pos_list = [
@@ -76,7 +80,8 @@ def _flood_fill_inner_func(grid: array2d, fill_value, target_value, start_x: int
     
     return filled_cell_count + 1  # 将递归结果添加到 filled_cell_count 中并返回
 
-def brogue_designCircularRoom(grid: array2d):
+
+def brogue_designCircularRoom(grid: array2d[int]):
     '''
     在grid中央上绘制一个圆形房间, 有大概率生成实心圆, 有小概率生成甜甜圈样式
     
@@ -89,7 +94,6 @@ def brogue_designCircularRoom(grid: array2d):
     center_x = grid.width//2
     center_y = grid.height//2
     
-    
     # 确定房间的半径
     if random.random() < 0.5:
         room_radius = random.randint(4, 10)
@@ -97,16 +101,15 @@ def brogue_designCircularRoom(grid: array2d):
         room_radius = random.randint(2, 4)
     
     # 绘制房间
-    SimpleShapes.draw_circle(grid, 1, center_x, center_y, room_radius)
+    SimpleShapes.draw_circle(grid, ONE, center_x, center_y, room_radius)
     
     # 绘制房间中的空洞
     if room_radius > 6 and random.random() < 0.5:
         hole_radius = random.randint(3, room_radius-3)
-        fill_value = 0
-        SimpleShapes.draw_circle(grid, fill_value, center_x, center_y, hole_radius)
+        SimpleShapes.draw_circle(grid, ZERO, center_x, center_y, hole_radius)
 
 
-def brogue_designSmallRoom(grid: array2d):
+def brogue_designSmallRoom(grid: array2d[int]):
     '''
     在grid中央上绘制一个矩形房间
     
@@ -114,23 +117,22 @@ def brogue_designSmallRoom(grid: array2d):
     '''
     assert grid.width >= 6 and grid.height >= 4 
     
-    grid.fill_(0)  # 以0填充所有的格子
+    grid.fill_(ZERO)  # 以0填充所有的格子
     
     room_width = random.randint(3, 6)
     room_height = random.randint(2, 4)
     room_x = (grid.width - room_width) // 2  # 确保房间的中心和grid中心对齐
     room_y = (grid.height - room_height) // 2
     
-    fill_value=1
-    SimpleShapes.draw_rectangle(grid, fill_value, room_x, room_y, room_width, room_height)
+    SimpleShapes.draw_rectangle(grid, ONE, room_x, room_y, room_width, room_height)
     
     
-def brogue_designCrossRoom(grid: array2d):
+def brogue_designCrossRoom(grid: array2d[int]):
     '''
     在房间偏左下的位置生成两个矩形交叉而成的房间
     '''
     assert grid.width >= 30 and grid.height >= 15
-    grid.fill_(0)  # 以0填充所有的格子
+    grid.fill_(ZERO)  # 以0填充所有的格子
 
     # 确定两个房间的x坐标和宽度
     room1_width = random.randint(3, 12)
@@ -157,27 +159,25 @@ def brogue_designCrossRoom(grid: array2d):
         room2_height -                                  \
         random.choice([0, -1,-1, -2,-2, -3])            
     
-    
     # 将房间整体向左下角偏移
     room1_x -= 5
     room2_x -= 5
     room1_y += 5
     room2_y += 5
     
-    
     # 绘制
-    fill_value = 1
-    SimpleShapes.draw_rectangle(grid, fill_value, room1_x, room1_y, room1_width, room1_height)
-    SimpleShapes.draw_rectangle(grid, fill_value, room2_x, room2_y, room2_width, room2_height)
-    
-def brogue_designSymmetricalCrossRoom(grid: array2d):
+    SimpleShapes.draw_rectangle(grid, ONE, room1_x, room1_y, room1_width, room1_height)
+    SimpleShapes.draw_rectangle(grid, ONE, room2_x, room2_y, room2_width, room2_height)
+
+
+def brogue_designSymmetricalCrossRoom(grid: array2d[int]):
     '''
     在房间中央生成两个矩形交叉而成的房间
     
     将不会生成"L"形房间
     '''
     assert grid.width >= 8 and grid.height >= 5 
-    grid.fill_(0)  # 以0填充所有的格子
+    grid.fill_(ZERO)  # 以0填充所有的格子
 
     # 确定房间1的规格
     room1_width = random.randint(4, 8)
@@ -188,39 +188,37 @@ def brogue_designSymmetricalCrossRoom(grid: array2d):
     room2_height = 3 - 1 if room1_width % 2 == 0 else 3
     
     # 根据两个房间的规格, 确定格子的位置, 为了使得它们落在grid中央
-    room1_x = (grid.width - room1_width)//2
-    room1_y = (grid.height - room1_height)//2
-    room2_x = (grid.width - room2_width)//2
-    room2_y = (grid.height - room2_height)//2
+    room1_x = (grid.width - room1_width) // 2
+    room1_y = (grid.height - room1_height) // 2
+    room2_x = (grid.width - room2_width) // 2
+    room2_y = (grid.height - room2_height) // 2
     
     # 绘制
-    fill_value = 1
-    SimpleShapes.draw_rectangle(grid, fill_value, room1_x, room1_y, room1_width, room1_height)
-    SimpleShapes.draw_rectangle(grid, fill_value, room2_x, room2_y, room2_width, room2_height)
+    SimpleShapes.draw_rectangle(grid, ONE, room1_x, room1_y, room1_width, room1_height)
+    SimpleShapes.draw_rectangle(grid, ONE, room2_x, room2_y, room2_width, room2_height)
 
 
-def brogue_designChunkyRoom(grid: array2d):
+def brogue_designChunkyRoom(grid: array2d[int]):
     '''
     生成若干连续的小圆(下面称作chunk)拼成的房间, 首个圆生成在grid中央
     '''
     assert grid.width >= 14 and grid.height >= 15
     
-    grid.fill_(0) # 以0填充所有的格子
+    grid.fill_(ZERO) # 以0填充所有的格子
 
     chunk_count = random.randint(2, 8)  # 即将生成的小圆数量
     radius = 2  # 所有小圆的半径
     
     # 定义并绘制首个圆, 并寄存到表示"上一个圆"的变量
     last_circle = {
-        'x': grid.width//2, 
-        'y': grid.height//2,
-        'next_min_x': grid.width//2 - 3,  # 下一个圆的圆心随机生成范围
-        'next_max_x': grid.width//2 + 3,
-        'next_min_y': grid.height//2 - 3,
-        'next_max_y': grid.height//2 + 3,
+        'x': grid.width // 2, 
+        'y': grid.height // 2,
+        'next_min_x': grid.width // 2 - 3,  # 下一个圆的圆心随机生成范围
+        'next_max_x': grid.width // 2 + 3,
+        'next_min_y': grid.height // 2 - 3,
+        'next_max_y': grid.height // 2 + 3,
     }
-    fill_value = 1
-    SimpleShapes.draw_circle(grid, fill_value, last_circle['x'], last_circle['y'], radius)
+    SimpleShapes.draw_circle(grid, ONE, last_circle['x'], last_circle['y'], radius)
     
     for _ in range(chunk_count):
         # 确定圆的位置, 必须让所有的圆的圆心落在已绘制的区域上
@@ -244,27 +242,26 @@ def brogue_designChunkyRoom(grid: array2d):
         last_circle = circle
 
         #绘制
-        fill_value = 1
-        SimpleShapes.draw_circle(grid, fill_value, circle['x'], circle['y'], radius)
+        SimpleShapes.draw_circle(grid, ONE, circle['x'], circle['y'], radius)
 
 
-def brogue_designEntranceRoom(grid: array2d):
+def brogue_designEntranceRoom(grid: array2d[int]):
     assert grid.width >= 22 and grid.height >= 12 
     
-    grid.fill_(0)
+    grid.fill_(ZERO)
     
     room1_width = 8
     room1_height = 10
     room2_width = 20
     room2_height = 5
-    room1_x = grid.width//2 - room1_width//2 - 1
+    room1_x = grid.width // 2 - room1_width // 2 - 1
     room1_y = grid.height - room1_height - 2
-    room2_x = grid.width//2 - room2_width//2 - 1
+    room2_x = grid.width // 2 - room2_width // 2 - 1
     room2_y = grid.height - room2_height - 2
 
-    fill_value = 1
-    SimpleShapes.draw_rectangle(grid, fill_value, room1_x, room1_y, room1_width, room1_height)
-    SimpleShapes.draw_rectangle(grid, fill_value, room2_x, room2_y, room2_width, room2_height)
+    fill_value = ONE
+    SimpleShapes.draw_rectangle(grid, ONE, room1_x, room1_y, room1_width, room1_height)
+    SimpleShapes.draw_rectangle(grid, ONE, room2_x, room2_y, room2_width, room2_height)
     
 
 # ---------------------------------洞穴---------------------------------
@@ -288,9 +285,10 @@ def brogue_design_cave(grid: array2d):
     _brogue_designCavern(grid, 50, grid.width-2, 20, grid.height-2)
 
 
+
 # ----------- _brogue_designCavern 为原作函数, 以上为原作中调用该函数的四个地方
 def _brogue_designCavern(
-    grid: array2d,      
+    grid: array2d[int],      
     min_width: int,  # 房间的生成限宽和限高
     max_width: int, 
     min_height: int, 
@@ -299,7 +297,7 @@ def _brogue_designCavern(
     '''
     使用元胞自动机生成限定规格的一块洞穴
     '''
-    grid.fill_(0)
+    grid.fill_(ZERO)
     
     blob_grid = array2d(grid.width, grid.height, default=None)  # 用来生成块的网格, 规格与grid一致
     round_count = 2  # 当它被设定地很高时, 生成将非常耗时, 当它越大, 房间越大,但是边缘越粗糙, 反之, 当它越小,房间越小,边缘越光滑
@@ -332,7 +330,7 @@ def _brogue_designCavern(
 
 # _brogue_designCavern 的一部分, 用于构造房间, _brogue_designCavern会将该房间插入到大的grid
 def _brogue_createBlobOnGrid(
-    grid: array2d, 
+    grid: array2d[int], 
     blob_min_width: int, 
     blob_max_width: int, 
     blob_min_height: int,  
@@ -369,8 +367,6 @@ def _brogue_createBlobOnGrid(
         四元组, 其中每个元素分别表示最大块外接矩形的 (左上角x坐标, 左上角y坐标, 宽度, 高度)
     '''
     
-
-
     survival_value, dead_value = -1, -2
     neighbor_cell_delta_list = [
         [-1,-1], [ 0,-1], [ 1,-1],
@@ -383,7 +379,6 @@ def _brogue_createBlobOnGrid(
     while True:
         loop_count += 1
         assert loop_count <= TIME_OUT_LOOP
-        
         
         grid.fill_(0)
         # ---- 生成初始噪声
@@ -410,7 +405,6 @@ def _brogue_createBlobOnGrid(
                         if grid.is_valid(cell_x + dx, cell_y + dy) \
                         and last_grid[cell_x + dx, cell_y + dy] == survival_value  # 遍历的坐标必须在grid之内, 也必须是活细胞
                         ])
-                    
                     
                     # 计算本轮迭代中该格子的细胞的命运
                     will_birth = \
@@ -492,7 +486,6 @@ def _brogue_createBlobOnGrid(
         # 从四个方向自外向内搜索块的边界
         for outer_loop, inner_loop, scan_target, x_y in scan_loops:
 
-
             # 扫描线从grid的边缘开始向内推进
             for scan_line_index in range(*outer_loop):
 
@@ -515,7 +508,6 @@ def _brogue_createBlobOnGrid(
                 # 首次发现块后, 结束当前方向上的扫描
                 if has_found_scan_target:
                     break
-            
         
         # 计算规格
         biggest_blob["width"] = biggest_blob["max_x"] - biggest_blob["min_x"] + 1
@@ -528,9 +520,9 @@ def _brogue_createBlobOnGrid(
             for x in range(grid.width):
                 for y in range(grid.height):
                     if grid[x, y] == biggest_blob['id']:
-                        grid[x, y] = 1
+                        grid[x, y] = ONE
                     else:
-                        grid[x, y] = 0
+                        grid[x, y] = ZERO
             
             # 终止外层while循环, 返回最大块的信息
             # print("loop_count:", loop_count)
