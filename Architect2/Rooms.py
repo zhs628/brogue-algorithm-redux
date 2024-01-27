@@ -81,6 +81,101 @@ def _flood_fill_inner_func(grid: array2d[int], fill_value, target_value, start_x
     return filled_cell_count + 1  # 将递归结果添加到 filled_cell_count 中并返回
 
 
+# TODO 函数未经测试
+def brogue_directionOfDoorSite(grid:array2d, door_x:int, door_y:int):
+    '''
+    以(door_X, door_Y)为中心, 搜索邻近的4个格子是否有且仅有一个符合"能够让位于(door_x, door_y)的门打开"条件
+    
+    返回值: Int 
+        -1: (door_X,door_y)附近无法生成门
+        0:  可以生成门, 将生成在(door_X,door_y)的上面一格
+        1:  可以生成门, 将生成在(door_X,door_y)的下面一格
+        2:  可以生成门, 将生成在(door_X,door_y)的左面一格
+        3:  可以生成门, 将生成在(door_X,door_y)的右面一格
+    
+    我们希望生成于(door_x,door_y)的门能够不被阻挡地向一个空的方向打开, 并保证门的背后就是房间, 还需保证一个门仅有唯一的可选打开方向
+    
+    本算法在理论上, 只有这一种情况是可以生成门的:  
+                            ■ ■ ■
+                              +     加号是(door_X,door_Y), 实心方块是房间格子(值为1), 此时门的朝向为(door_x, door_y)的下方, 函数将返回1
+    下面的情况都无法生成门:
+        1. 2个及以上邻边都有打开门的条件:
+                ■ ■
+                + ■   此处因为下侧和左侧都符合打开门的条件, 因此这一格不能生成门, 必须仅有一侧能够打开门, 才符合最终条件
+                
+        2. 门的打开方向是地图边界:
+            \\|   ■
+            \\| + ■ <-- 此处因为其对称点在地图边界外, 因此不能生成门
+            \\|   ■
+    
+    '''
+    # 门不能生成在房间内,而至少是房间边缘的外侧一格
+    if grid[door_x][door_y] == ONE:
+        return -1 # no direction
+    
+    edge_neighbor_pos_list = [
+        [door_x, door_y + 1],
+        [door_x, door_y - 1],
+        [door_x + 1, door_y],
+        [door_x - 1, door_y],
+    ]
+    directions = [
+        -1, # no direction
+        0,  # up
+        1,  # down
+        2,  # left
+        3   # right
+    ]
+    
+    
+    selected_direction = None
+    for direction, neighbor_pos in list(zip(directions, edge_neighbor_pos_list)):
+        neighbor_x, neighbor_y = neighbor_pos
+        
+        # 以(door_x, door_y)为中心, 计算其对称点的坐标
+        opposite_x = door_x - (neighbor_x - door_x)
+        opposite_y = door_y - (neighbor_y - door_y)
+        
+        # 无法满足这些条件的方位, 将不能打开门, 因此跳过
+        if not (grid.is_valid(neighbor_x, neighbor_y) and grid.is_valid(opposite_x, opposite_y) and grid[opposite_x][opposite_y] == ONE):
+            continue
+        
+        # 发现不止一处可以打开门的方向, 则无法生成门
+        if selected_direction is not None:
+            return -1 # no direction
+
+        selected_direction = direction
+    
+    return selected_direction
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 def brogue_designCircularRoom(grid: array2d[int]):
     '''
     在grid中央上绘制一个圆形房间, 有大概率生成实心圆, 有小概率生成甜甜圈样式
