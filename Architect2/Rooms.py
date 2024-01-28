@@ -16,10 +16,10 @@ def insert_room_to_grid(grid: array2d, room_grid: array2d, delta_x:int, delta_y:
     fill_value = room_grid[start_x, start_y]
     grid[start_x+delta_x, start_y+delta_y] = fill_value
     edge_neighbor_pos_list = [
-        [start_x, start_y + 1],
         [start_x, start_y - 1],
-        [start_x + 1, start_y],
+        [start_x, start_y + 1],
         [start_x - 1, start_y],
+        [start_x + 1, start_y],
     ]
     # 注意循环变量所指代的那个坐标一直都是在room_grid中的点
     for next_x, next_y in edge_neighbor_pos_list:
@@ -67,10 +67,10 @@ def _flood_fill_inner_func(grid: array2d[int], fill_value, target_value, start_x
     filled_cell_count = 0
     grid[start_x, start_y] = fill_value
     edge_neighbor_pos_list = [
-        [start_x, start_y + 1],
         [start_x, start_y - 1],
-        [start_x + 1, start_y],
+        [start_x, start_y + 1],
         [start_x - 1, start_y],
+        [start_x + 1, start_y],
     ]
     for next_x, next_y in edge_neighbor_pos_list:
         if not grid.is_valid(next_x, next_y):
@@ -82,7 +82,7 @@ def _flood_fill_inner_func(grid: array2d[int], fill_value, target_value, start_x
 
 
 # TODO 函数未经测试
-def brogue_directionOfDoorSite(grid:array2d, door_x:int, door_y:int):
+def brogue_directionOfDoorSite(grid:array2d[int], door_x:int, door_y:int):
     '''
     以(door_X, door_Y)为中心, 搜索邻近的4个格子是否有且仅有一个符合"能够让位于(door_x, door_y)的门打开"条件
     
@@ -114,12 +114,12 @@ def brogue_directionOfDoorSite(grid:array2d, door_x:int, door_y:int):
         return -1 # no direction
     
     edge_neighbor_pos_list = [
-        [door_x, door_y + 1],
         [door_x, door_y - 1],
-        [door_x + 1, door_y],
+        [door_x, door_y + 1],
         [door_x - 1, door_y],
+        [door_x + 1, door_y],
     ]
-    directions = [
+    direction_index_list = [
         -1, # no direction
         0,  # up
         1,  # down
@@ -128,8 +128,8 @@ def brogue_directionOfDoorSite(grid:array2d, door_x:int, door_y:int):
     ]
     
     
-    selected_direction = None
-    for direction, neighbor_pos in list(zip(directions, edge_neighbor_pos_list)):
+    selected_direction_index = None
+    for direction, neighbor_pos in list(zip(direction_index_list, edge_neighbor_pos_list)):
         neighbor_x, neighbor_y = neighbor_pos
         
         # 以(door_x, door_y)为中心, 计算其对称点的坐标
@@ -141,20 +141,101 @@ def brogue_directionOfDoorSite(grid:array2d, door_x:int, door_y:int):
             continue
         
         # 发现不止一处可以打开门的方向, 则无法生成门
-        if selected_direction is not None:
+        if selected_direction_index is not None:
             return -1 # no direction
 
-        selected_direction = direction
+        selected_direction_index = direction
     
-    return selected_direction
+    return selected_direction_index
 
 
 
+# TODO 函数未经测试
+def brogue_chooseRandomDoorSites(grid: array2d[int]):
+    '''
+    对于上下左右四个方向, 在提供的房间grid中, 分别寻找1个能够满足"可以向本方向打开门"的格子的位置, 当某个方向找不到符合要求的格子时, 将使用[-1, -1]表示
+    
+    对于"可以向本方向打开门"的判断标准:
+        1. 需要首先满足 brogue_directionOfDoorSite 中对格子的要求
+        2. 其次需要保证向门打开的方向上延伸10格, 不能遇到房间格子
+    
+    返回值: 
+    [
+        [int, int], # 1个可以向上打开门的格子的位置
+        [int, int], # 1个可以向下打开门的格子的位置
+        [int, int], # 1个可以向左打开门的格子的位置
+        [int, int]  # 1个可以向右打开门的格子的位置
+    ]
+    '''
+    
+    buffer_grid = grid.copy()
+    
+    direction_symbols = [
+        2,  # up
+        3,  # down
+        4,  # left
+        5   # right
+    ]
+    
+    direction_delta_list = [
+        [0, -1],
+    [0, 1], [-1, 0],
+        [1, 0]
+    ]
 
+    
+    for x in range(buffer_grid.width):
+        for y in range(buffer_grid.height):
+            
+            # 首先判断本格是否满足"可以向本方向打开门"的判断标准的第一点
+            direction_index = brogue_directionOfDoorSite(buffer_grid, x, y)
+            if direction_index == -1:  # no direction  表示本格无法满足条件
+                continue
+            
+            # 下面的循环会判断是否满足标准的第二点
+            direction_delta = direction_delta_list[direction_index]
+            direction_delta_x = direction_delta[0]
+            direction_delta_y = direction_delta[1]
+            
+            can_open = True
+            for detect_length in range(10):
+                # 将门打开的方向(通过第一重判断得到的direction_index)作为探测方向依次延申10格
+                detect_x = x + detect_length * direction_delta_x
+                detect_y = y + detect_length * direction_delta_y
+                # 忽略出界的探测点
+                if not buffer_grid.is_valid(detect_x, detect_y):
+                    continue
+                # 如果发现探测途中遇到了房间格子, 则说明无法向该方向打开门
+                if buffer_grid[detect_x, detect_y] == ONE:
+                    can_open = False
+                    break
+            
+            # 标记完全符合判断标准的位置为可以打开门的方向的标签
+            if can_open:
+                buffer_grid[x, y] = direction_symbols[direction_index]
+    
+    result = [
+        [-1, -1],
+        [-1, -1],
+        [-1, -1],
+        [-1, -1]
+    ]
+    for direction_index, direction_symbol in enumerate(direction_symbols):
+        
+        # 找到所有能够朝向 direction_symbol 打开门的格子
+        optional_pos_list = []
+        for x in range(buffer_grid.width):
+            for y in range(buffer_grid.height):
+                if buffer_grid[x,y] == direction_symbol:
+                    optional_pos_list.append([x,y])
+        
+        # 选择一个作为结果
+        if len(optional_pos_list) > 0:
+            result[direction_index] = random.choice(optional_pos_list)
+        
+        # 否则让 result[direction_index] 维持[-1,-1]表示不存在能够在该方向上打开门的格子
 
-
-
-
+    return result
 
 
 
