@@ -62,11 +62,32 @@ if __name__ == '__main__':
     Rooms.brogue_design_large_north_south_cavern(grid)
     test_tools.print_grid(grid)
     
-    # 生成这个房间很耗时,建议注释掉
+    # 生成这个房间很耗时
     # grid = array2d(100, 100, 0)  # cave房间非常大, 我们需要很大的grid来容纳它, 否则它几乎不可能在短时间内被生成
     # Rooms.brogue_design_cave(grid)
     # test_tools.print_grid(grid)
     
+    # Rooms 生成门
+    grid = array2d(40, 40, 0)
+    Rooms.brogue_design_large_north_south_cavern(grid)
+    doors_tuple = Rooms.brogue_chooseRandomDoorSites(grid)
+    for (x,y) in doors_tuple:
+        if grid.is_valid(x,y):
+            grid[x,y] = 2
+    print(doors_tuple)
+    test_tools.print_grid(grid)
+    
+    grid = array2d(40, 40, 0)
+    Rooms.brogue_designChunkyRoom(grid)
+    doors_tuple = Rooms.brogue_chooseRandomDoorSites(grid)
+    for (x,y) in doors_tuple:
+        if grid.is_valid(x,y):
+            grid[x,y] = 2
+    print(doors_tuple)
+    test_tools.print_grid(grid)
+    
+    
+    # 下面进行大规模的测试
     if is_pkpy:
         test_tools.test_all_rooms(
             selected_func_name=["brogue_designCircularRoom", "brogue_designCrossRoom", "brogue_designSymmetricalCrossRoom", "brogue_designChunkyRoom", "brogue_designSmallRoom"],
@@ -100,4 +121,4 @@ if __name__ == '__main__':
         #     ignore_assertion_error=True,
         #     mulity_process_count=16
         # )
-
+        
