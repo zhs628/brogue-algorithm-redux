@@ -27,7 +27,7 @@ def _random_selection(original_list, ratio):
     return list(selected_elements)
 
 
-def print_grid(grid: array2d[int], symbols=".+#", message="------------------------"):
+def print_grid(grid: array2d[int], symbols=".+#@", message="------------------------"):
     counter = defaultdict(int)
 
     for x in range(grid.width):

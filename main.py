@@ -5,7 +5,6 @@ import sys
 is_pkpy = not hasattr(sys, 'getrefcount')
 
 if __name__ == '__main__':
-
     # SimpleShapes
 
     grid = array2d(20, 10, default=0)
@@ -68,25 +67,24 @@ if __name__ == '__main__':
     # test_tools.print_grid(grid)
     
     # Rooms 生成门
-    grid = array2d(40, 40, 0)
+    grid = array2d(79, 29, 0)
     Rooms.brogue_design_large_north_south_cavern(grid)
-    doors_tuple = Rooms.brogue_chooseRandomDoorSites(grid)
-    for (x,y) in doors_tuple:
+    doors_pos = Rooms.brogue_chooseRandomDoorSites(grid)
+    for x,y in doors_pos:
         if grid.is_valid(x,y):
             grid[x,y] = 2
-    print(doors_tuple)
+    print(doors_pos)
     test_tools.print_grid(grid)
     
-    grid = array2d(40, 40, 0)
-    Rooms.brogue_designChunkyRoom(grid)
-    doors_tuple = Rooms.brogue_chooseRandomDoorSites(grid)
-    for (x,y) in doors_tuple:
+    # 生成走廊
+    doors_pos = Rooms.brogue_attachHallwayTo(grid, doors_pos)
+    for x,y in doors_pos:
         if grid.is_valid(x,y):
-            grid[x,y] = 2
-    print(doors_tuple)
+            grid[x,y] = 3
+    print(doors_pos)
     test_tools.print_grid(grid)
-    
-    
+        
+
     # 下面进行大规模的测试
     if is_pkpy:
         test_tools.test_all_rooms(
@@ -121,4 +119,4 @@ if __name__ == '__main__':
         #     ignore_assertion_error=True,
         #     mulity_process_count=16
         # )
-        
+
