@@ -26,27 +26,46 @@ def _random_selection(original_list, ratio):
         selected_elements.add(selected_element)
     return list(selected_elements)
 
-
 def print_grid(grid: array2d[int], symbols=".+#@", message="------------------------"):
-    counter = defaultdict(int)
-
-    for x in range(grid.width):
-        for y in range(grid.height):
-            counter[grid[x, y]] += 1
-
-    sorted_elements = sorted(
-        counter, key=lambda x: counter[x], reverse=True
-    )
-
-    symbol_dict = {}  # {element: symbol}
-    for i in range(max(len(sorted_elements), len(symbols))):
-        key = sorted_elements[i] if i < len(sorted_elements) else None
-        value = symbols[i] if i < len(symbols) else sorted_elements[i]
-        symbol_dict[key] = value
+# https://gist.github.com/fnky/458719343aabd01cfb17a3a4f7296797
+# Color Name	    Foreground Color Code	Background Color Code
+# Black	            30	                    40
+# Red	            31	                    41
+# Green	            32	                    42
+# Yellow	        33	                    43
+# Blue	            34	                    44
+# Magenta	        35	                    45
+# Cyan	            36	                    46
+# White	            37	                    47
+# Default	        39	                    49
+# Reset	            0	                    0
+# Bright Black	    90	                    100
+# Bright Red	    91	                    101
+# Bright Green	    92	                    102
+# Bright Yellow	    93	                    103
+# Bright Blue	    94	                    104
+# Bright Magenta	95	                    105
+# Bright Cyan	    96	                    106
+# Bright White	    97	                    107
+    
+    # (symbol, fg, bg)
+    palette = {
+        0: (".", 30, 0),
+        1: ("1", 0, 41),
+        2: ("2", 0, 42),
+        3: ("3", 0, 43),
+    }
 
     print(message)
-    grid.map(symbol_dict.__getitem__).draw(width=2)
-
+    for x in range(grid.width):
+        for y in range(grid.height):
+            symbol, fg, bg = palette[grid[x, y]]
+            symbol = symbol + ' '
+            if fg == 0:
+                print(f"\033[0;{bg}m{symbol}\033[0m", end="")
+            else:
+                print(f"\033[0;{fg}m{symbol}\033[0m", end="")
+        print()
 
 
 def _test(args):
