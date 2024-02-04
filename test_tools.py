@@ -62,9 +62,9 @@ def print_grid(grid: array2d[int], symbols=".+#@", message="--------------------
             symbol, fg, bg = palette[grid[x, y]]
             symbol = symbol + ' '
             if fg == 0:
-                print(f"\033[0;{bg}m{symbol}\033[0m", end="")
+                print(f"\x1b[0;{bg}m{symbol}\x1b[0m", end="")
             else:
-                print(f"\033[0;{fg}m{symbol}\033[0m", end="")
+                print(f"\x1b[0;{fg}m{symbol}\x1b[0m", end="")
         print()
 
 
