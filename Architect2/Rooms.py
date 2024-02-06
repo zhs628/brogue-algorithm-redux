@@ -15,7 +15,11 @@ HORIZONTAL_CORRIDOR_MIN_LENGTH = 5
 HORIZONTAL_CORRIDOR_MAX_LENGTH = 15
 VERTICAL_CORRIDOR_MIN_LENGTH = 2
 VERTICAL_CORRIDOR_MAX_LENGTH = 9
-
+# 房间类型的数量, 原作设定是8, 即一共存在8种样式的房间
+ROOM_TYPE_COUNT = 8
+# 超大洞穴类型房间的最小规格
+CAVE_MIN_WIDTH = 50
+CAVE_MIN_HEIGHT = 20
 
 # 在本文件中, 完全复刻自brogue的算法将使用 "brogue_<brogue中该函数的原名>" 命名
 def clamp(x, low, hi):
@@ -183,8 +187,9 @@ def brogue_chooseRandomDoorSites(grid: array2d[int]):
         - 2. 其次需要保证向门打开的方向上延伸10格, 不能遇到房间格子
     
     - 返回值:
-    
+        
     ```
+        (list[list[int, 2], 4]): 
         [
             [int, int], # 1个可以向上打开门的格子的位置
             [int, int], # 1个可以向下打开门的格子的位置
@@ -268,7 +273,7 @@ def brogue_chooseRandomDoorSites(grid: array2d[int]):
 
 
 
-def brogue_attachHallwayTo(grid: array2d[int], door_positions: list[list[int]]):
+def brogue_attachHallwayTo(grid: array2d[int], door_positions: list[list[int, 2], 4]):
     '''
     在grid上绘制走廊。并返回走廊的出口坐标, 大多数情况下出口坐标会是在走廊方向继续延伸一格的位置, 在小部分情况下(15%)会返回排除走廊延伸方向的对向方向外的其余3个方向上的坐标
     ```
@@ -287,11 +292,11 @@ def brogue_attachHallwayTo(grid: array2d[int], door_positions: list[list[int]]):
     ```
     Args:
         grid (array2d[int]): 二维数组表示地图的网格，应当为地牢的总地图尺寸。
-        door_positions (list[list[int]]): 4个方向的门的位置列表。
+        door_positions (list[list[int, 2], 4]): 4个方向的门的位置列表。
             一个包含4个二元列表的列表，每个二元列表分别表示朝向"上,下,左,右"打开的门的位置。
             当门的位置为[-1, -1]时表示没有朝向该方向打开的门。
     Returns:
-        (list[list[int]]): 4个方向的走廊出口的位置列表。
+        (list[list[int, 2], 4]): 4个方向的走廊出口的位置列表。
         
     '''
     # 要求传入的grid的尺寸必须与总的地牢的地图尺寸一致
@@ -589,8 +594,9 @@ def brogue_design_large_east_west_cavern(grid: array2d):
     _brogue_designCavern(grid, 20, grid.height-2, 4, 8)
 
 def brogue_design_cave(grid: array2d):
-    assert grid.width >= 65 and grid.height >= 54
-    _brogue_designCavern(grid, 50, grid.width-2, 20, grid.height-2)
+    assert grid.width >= CAVE_MIN_WIDTH and grid.height >= CAVE_MIN_HEIGHT
+    print(CAVE_MIN_WIDTH, grid.width-2, CAVE_MIN_HEIGHT, grid.height-2)
+    _brogue_designCavern(grid, CAVE_MIN_WIDTH, grid.width-2, CAVE_MIN_HEIGHT, grid.height-2)
 
 
 
@@ -603,8 +609,10 @@ def _brogue_designCavern(
     max_height: int \
     ):
     '''
-    使用元胞自动机生成限定规格的一块洞穴
+    使用元胞自动机生成限定规格的一块洞穴样式的房间
     '''
+    assert min_width <= max_width and min_height <= max_height
+    
     grid.fill_(ZERO)
     
     blob_grid = array2d(grid.width, grid.height, default=None)  # 用来生成块的网格, 规格与grid一致
@@ -682,7 +690,7 @@ def _brogue_createBlobOnGrid(
         [-1, 1], [ 0, 1], [ 1, 1]
     ]
     
-    TIME_OUT_LOOP = 1000
+    TIME_OUT_LOOP = 10000
     loop_count = 0
     while True:
         loop_count += 1
@@ -842,3 +850,75 @@ def _brogue_createBlobOnGrid(
 
 
 
+# 以上所有房间生成算法的调用者, 将从以上房间中随机选择一个生成, 并生成走廊并返回走廊出口----------------------------
+def brogue_designRandomRoom(grid:array2d[int], room_type_frequencies:list[float, ROOM_TYPE_COUNT]=[1,1,1,1,1,1,1,1], has_doors:bool=True, has_hallway:bool=True):
+    '''
+    在grid中就地生成一个随机的房间, 附加上走廊并返回走廊出口
+    
+    Args:
+        grid (array2d[int]): 二维数组表示地图的网格，应当为地牢的总地图尺寸。
+        has_doors (bool): 是否生成门
+        has_hallway (bool): 是否生成走廊(只有当有has_doors为True时才有效)
+        room_type_frequencies (list[float, ROOM_TYPE_COUNT]): 一个长度为ROOM_TYPE_COUNT的列表, 表示每种房间的生成概率, 每个元素的值应当在0~1之间
+    Returns:
+        (list[list[int, 2], 4]): 表示 走廊出口/门 的位置
+    '''
+    # 根据 room_type_frequencies 采用轮盘赌选择房间类型
+    assert len(room_type_frequencies) == ROOM_TYPE_COUNT
+    room_type_func_index = -1
+    #     累加权重以创建权重累积列表
+    cumulative_weights = []
+    total_sum = 0
+    for w in room_type_frequencies:
+        assert w >= 0  # 每一个权重必须是非负数
+        total_sum += w
+        cumulative_weights.append(total_sum)
+
+    #     生成一个0到总权重累积之间的随机数
+    r = random.uniform(0, total_sum)
+
+    #     找到随机数所在的权重区间
+    for index, cumulative_weight in enumerate(cumulative_weights):
+        if r < cumulative_weight:
+            room_type_func_index = index
+            break  # 返回该区间对应的原始权重列表的索引
+    
+    # 必须找到一个合法的房间类型索引
+    assert room_type_func_index >= 0 and room_type_func_index < ROOM_TYPE_COUNT
+    
+    # 生成房间
+    room_type_func_list = [
+        brogue_designCrossRoom,
+        brogue_designSymmetricalCrossRoom,
+        brogue_designSmallRoom,
+        brogue_designCircularRoom,
+        brogue_designChunkyRoom,
+        [
+            brogue_design_compat_cavern,
+            brogue_design_large_north_south_cavern,
+            brogue_design_large_east_west_cavern,
+        ],
+        brogue_design_cave,
+        brogue_designEntranceRoom
+    ]
+    selected_element = room_type_func_list[room_type_func_index]
+    if isinstance(selected_element, list):  # 选中了cavern, 那么进一步选择生成什么cavern
+        room_type_func = random.choice(selected_element)
+    else:
+        room_type_func = selected_element
+    
+    # 生成房间
+    room_type_func(grid)
+    
+    # 生成门
+    door_positions = [[-1,-1], [-1,-1], [-1,-1], [-1,-1]]
+    if has_doors:
+        door_positions = brogue_chooseRandomDoorSites(grid)
+        
+        # 生成走廊
+        if has_hallway:
+            door_positions = brogue_attachHallwayTo(grid, door_positions)
+    
+    
+    test_tools.print_grid(grid)
+    return door_positions

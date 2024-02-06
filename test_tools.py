@@ -57,8 +57,8 @@ def print_grid(grid: array2d[int], symbols=".+#@", message="--------------------
     }
 
     print(message)
-    for x in range(grid.width):
-        for y in range(grid.height):
+    for y in range(grid.height):
+        for x in range(grid.width):
             symbol, fg, bg = palette[grid[x, y]]
             symbol = symbol + ' '
             if fg == 0:
