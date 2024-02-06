@@ -5,6 +5,7 @@ import traceback
 import random
 import time
 from collections import defaultdict
+import time
 
 def _grid_draw_str(grid):
     line_list = []
@@ -208,3 +209,74 @@ def test_all_rooms(
         print("-------- All tests passed!")
     else:
         print("-------- Some tests failed!")
+
+
+from collections import defaultdict
+
+
+class ExecutionProfiler:
+    def __init__(self):
+        self.records = {} 
+
+    def record_start(self, layer: int, record_id: int, message: str):
+        if layer not in self.records:
+            self.records[layer] = {}
+        if record_id not in self.records[layer]:
+            self.records[layer][record_id] = {
+                'message': message,
+                'count': 0,
+                'total_time': 0.0,
+                'start_time': None
+            }
+        self.records[layer][record_id]['start_time'] = time.time()
+
+    def record_end(self, layer: int, record_id: int):
+        end_time = time.time()
+        record = self.records[layer][record_id]
+        start_time = record['start_time']
+        elapsed_time = end_time - start_time
+        record['total_time'] += elapsed_time
+        record['count'] += 1
+        record['start_time'] = None 
+
+    def __str__(self):
+        output = []
+        for layer, layer_records in sorted(self.records.items()):
+            indent = '  |  ' * (layer+1) 
+            for record_id, record in sorted(layer_records.items()):
+                output.append(
+                    f"{indent[:-3]}-----Layer {layer}, Record {record_id}:\n"
+                    f"{indent}  message:    {record['message']}\n"
+                    f"{indent}  count:      {record['count']}\n"
+                    f"{indent}  total_time: {record['total_time']:0.8f}\n"
+                    f"{indent}  avg_time:   {record['total_time'] / record['count']:0.8f}\n"
+                    f"{indent}"
+                )
+        return '\n'.join(output)
+
+
+
+if __name__ == "__main__":
+
+    profiler = ExecutionProfiler()
+    def func():
+        for i in range(1000):
+            profiler.record_start(layer=1, record_id=0, message="外层循环")  # layer和record_id的组合能够唯一确定一个record, 每一层layer中的id都是相互独立的
+            if i % 2 == 1:
+                for j in range(1000):
+                    profiler.record_start(layer=2, record_id=0, message="单数循环")
+                    j + 1
+                    profiler.record_end(layer=2, record_id=0)
+            else:
+                for j in range(1000):
+                    profiler.record_start(layer=2, record_id=1, message="双数循环")
+                    j + 1
+                    profiler.record_end(layer=2, record_id=1)
+            profiler.record_end(layer=1, record_id=0)
+
+    profiler.record_start(layer=0, record_id=0, message="func")
+    func()
+    profiler.record_end(layer=0, record_id=0)
+
+
+    print(profiler)
