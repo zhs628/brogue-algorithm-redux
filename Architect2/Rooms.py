@@ -851,7 +851,7 @@ def _brogue_createBlobOnGrid(
 
 
 # 以上所有房间生成算法的调用者, 将从以上房间中随机选择一个生成, 并生成走廊并返回走廊出口----------------------------
-def brogue_designRandomRoom(grid:array2d[int], room_type_frequencies:list[float, ROOM_TYPE_COUNT]=[1,1,1,1,1,1,1,1], has_doors:bool=True, has_hallway:bool=True):
+def brogue_designRandomRoom(grid:array2d[int], room_type_frequencies=(1,1,1,1,1,1,1,1), has_doors:bool=True, has_hallway:bool=True):
     '''
     在grid中就地生成一个随机的房间, 附加上走廊并返回走廊出口
     

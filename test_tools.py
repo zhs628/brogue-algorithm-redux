@@ -239,20 +239,20 @@ class ExecutionProfiler:
         record['count'] += 1
         record['start_time'] = None 
 
-    def __str__(self):
-        output = []
-        for layer, layer_records in sorted(self.records.items()):
-            indent = '  |  ' * (layer+1) 
-            for record_id, record in sorted(layer_records.items()):
-                output.append(
-                    f"{indent[:-3]}-----Layer {layer}, Record {record_id}:\n"
-                    f"{indent}  message:    {record['message']}\n"
-                    f"{indent}  count:      {record['count']}\n"
-                    f"{indent}  total_time: {record['total_time']:0.8f}\n"
-                    f"{indent}  avg_time:   {record['total_time'] / record['count']:0.8f}\n"
-                    f"{indent}"
-                )
-        return '\n'.join(output)
+    # def __str__(self):
+    #     output = []
+    #     for layer, layer_records in sorted(self.records.items()):
+    #         indent = '  |  ' * (layer+1) 
+    #         for record_id, record in sorted(layer_records.items()):
+    #             output.append(
+    #                 f"{indent[:-3]}-----Layer {layer}, Record {record_id}:\n"
+    #                 f"{indent}  message:    {record['message']}\n"
+    #                 f"{indent}  count:      {record['count']}\n"
+    #                 f"{indent}  total_time: {record['total_time']:0.8f}\n"
+    #                 f"{indent}  avg_time:   {record['total_time'] / record['count']:0.8f}\n"
+    #                 f"{indent}"
+    #             )
+    #     return '\n'.join(output)
 
 
 
