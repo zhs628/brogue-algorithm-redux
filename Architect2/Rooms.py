@@ -712,15 +712,13 @@ def _brogue_createBlobOnGrid(
 
             # 每轮迭代遍历并修改 blob_grid 所有格子
             last_grid = grid.copy()  # 记录上一轮迭代的最终结果, 接下来将就地修改blob_grid
+
+            # 计算当前格子的周围中存在活细胞的数量
+            live_neighbors = grid.count_neighbors(survival_value)
+            
             for cell_x in range(grid.width):
                 for cell_y in range(grid.height):
-                    
-                    # 计算当前格子的周围中存在活细胞的数量
-                    neighbor_survived_num = sum([                      
-                        1 for dx, dy in neighbor_cell_delta_list  
-                        if grid.is_valid(cell_x + dx, cell_y + dy) \
-                        and last_grid[cell_x + dx, cell_y + dy] == survival_value  # 遍历的坐标必须在grid之内, 也必须是活细胞
-                        ])
+                    neighbor_survived_num = live_neighbors[cell_x, cell_y]
                     
                     # 计算本轮迭代中该格子的细胞的命运
                     will_birth = \
