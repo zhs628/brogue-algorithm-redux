@@ -286,7 +286,7 @@ class MyTqdm:
         self.bar_total_length = bar_len or int(console_width * 0.8 - len(self.desc) - len(unit) - len(str(total))*2+1 - 10 - len(indent))
         self.bar_total_length = None if self.bar_total_length < 5 else self.bar_total_length
         self.indent = indent
-        
+
     def __iter__(self):
         self.current_count = 0
         self.iterator = iter(self.iterable)
@@ -350,7 +350,7 @@ class MyTqdm:
             self.finished = True
 
 if __name__ == '__main__':
-    for i in MyTqdm(list(range(100))):
-        time.sleep(0.001)
+    for i in MyTqdm(list(range(10))):
+        time.sleep(0.1)
 
 

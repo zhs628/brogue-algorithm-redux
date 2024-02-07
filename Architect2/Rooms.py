@@ -1,25 +1,15 @@
+'''
+生成房间和走廊
+'''
+
+
 from array2d import array2d
 import random
 from . import SimpleShapes
 import test_tools
 import random
+from .const import *
 
-# 使用全局常量来表示格子的填充值，方便以后统一修改
-ONE = 1
-ZERO = 0
-# 地牢的总的地图的尺寸, 原作设定是(w:79, h:29)
-DUNGEON_WIDTH = 79  
-DUNGEON_HEIGHT = 29
-# 垂直/水平方向的房间走廊的长度区间, 原作设定是(水平:5~15, 垂直:2~9)
-HORIZONTAL_CORRIDOR_MIN_LENGTH = 5
-HORIZONTAL_CORRIDOR_MAX_LENGTH = 15
-VERTICAL_CORRIDOR_MIN_LENGTH = 2
-VERTICAL_CORRIDOR_MAX_LENGTH = 9
-# 房间类型的数量, 原作设定是8, 即一共存在8种样式的房间
-ROOM_TYPE_COUNT = 8
-# 超大洞穴类型房间的最小规格
-CAVE_MIN_WIDTH = 50
-CAVE_MIN_HEIGHT = 20
 
 # 在本文件中, 完全复刻自brogue的算法将使用 "brogue_<brogue中该函数的原名>" 命名
 def clamp(x, low, hi):
@@ -848,7 +838,7 @@ def _brogue_createBlobOnGrid(
 
 
 # 以上所有房间生成算法的调用者, 将从以上房间中随机选择一个生成, 并生成走廊并返回走廊出口----------------------------
-def brogue_designRandomRoom(grid:array2d[int], room_type_frequencies=(1,1,1,1,1,1,1,1), has_doors:bool=True, has_hallway:bool=True):
+def brogue_designRandomRoom(grid:array2d[int], room_type_frequencies:list[float]=(1,1,1,1,1,1,1,1), has_doors:bool=True, has_hallway:bool=True):
     '''
     在grid中就地生成一个随机的房间, 附加上走廊并返回走廊出口
     
@@ -856,7 +846,7 @@ def brogue_designRandomRoom(grid:array2d[int], room_type_frequencies=(1,1,1,1,1,
         grid (array2d[int]): 二维数组表示地图的网格，应当为地牢的总地图尺寸。
         has_doors (bool): 是否生成门
         has_hallway (bool): 是否生成走廊(只有当有has_doors为True时才有效)
-        room_type_frequencies (list[float, ROOM_TYPE_COUNT]): 一个长度为ROOM_TYPE_COUNT的列表, 表示每种房间的生成概率, 每个元素的值应当在0~1之间
+        room_type_frequencies (list[float, ROOM_TYPE_COUNT]): 一个长度为ROOM_TYPE_COUNT的列表, 表示每种房间的生成概率权重, 每个权重的值大于等于0即可
     Returns:
         (list[list[int, 2], 4]): 表示 走廊出口/门 的位置
     '''
