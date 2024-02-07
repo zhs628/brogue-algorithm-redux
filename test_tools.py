@@ -6,6 +6,8 @@ import random
 import time
 from collections import defaultdict
 import time
+import sys
+
 
 def _grid_draw_str(grid):
     line_list = []
@@ -122,6 +124,12 @@ def test_all_rooms(
     grid_height_range = grid_height_range or (15, 40)
     
     from Architect2 import Rooms
+    import sys
+    is_pkpy = not hasattr(sys, 'getrefcount')
+    if is_pkpy and mulity_process_count is not None:
+        content = 'test_all_rooms Waring: the parameter \"mulity_process_count\" in pkpy is not supported.'
+        print(f"\x1b[0;33m{content}\x1b[0m")
+        mulity_process_count = None
 
     print(f"---- Testing functions in Architect2.Rooms  (ignore_assertion_error={ignore_assertion_error})")
 
@@ -164,9 +172,15 @@ def test_all_rooms(
                 res_list = list(tqdm(p.imap(_test, args), total=len(args)))
             
         else:
-            res_list = []
-            for arg in args:
-                res_list.append(_test(arg))
+            if is_pkpy:
+                res_list = []
+                for arg in MyTqdm(args, desc="测试规模: ", indent="\t  "):
+                    res_list.append(_test(arg))
+            else:
+                from tqdm import tqdm
+                res_list = []
+                for arg in tqdm(args):
+                    res_list.append(_test(arg))
 
         avg_time_sum = 0
         avg_time_count = 0
@@ -254,29 +268,87 @@ class ExecutionProfiler:
     #             )
     #     return '\n'.join(output)
 
+class MyTqdm:
+    def __init__(self, iterable=None, total=None, desc='Processing...', unit='', ncols=None, bar_len=None, console_width=80, indent=''):
+        self.iterable = iterable
+        try:
+            self.total = total or len(iterable)
+        except:
+            self.total = total
+        self.desc = desc
+        self.unit = unit
+        self.ncols = ncols
+        self.start_time = time.time()
+        self.last_printed_len = 0
+        self.finished = False   
+        self.last_printed_time = time.time()
+        self.print_time_sep = 0.1
+        self.bar_total_length = bar_len or int(console_width * 0.8 - len(self.desc) - len(unit) - len(str(total))*2+1 - 10 - len(indent))
+        self.bar_total_length = None if self.bar_total_length < 5 else self.bar_total_length
+        self.indent = indent
+        
+    def __iter__(self):
+        self.current_count = 0
+        self.iterator = iter(self.iterable)
+        return self
+
+    def __next__(self):
+        if self.current_count == 0:
+            self._print_status()
+
+        value = next(self.iterator)
+        
+        can_print = True
+        if time.time() - self.last_printed_time < self.print_time_sep:
+            can_print = False
+        
+        if value == StopIteration:
+            self.finished = True
+            if can_print:
+                self._print_status()
+            return value
+        else:
+            self.current_count += 1
+            if can_print:
+                self._print_status()
+            return value
 
 
-if __name__ == "__main__":
-
-    profiler = ExecutionProfiler()
-    def func():
-        for i in range(1000):
-            profiler.record_start(layer=1, record_id=0, message="外层循环")  # layer和record_id的组合能够唯一确定一个record, 每一层layer中的id都是相互独立的
-            if i % 2 == 1:
-                for j in range(1000):
-                    profiler.record_start(layer=2, record_id=0, message="单数循环")
-                    j + 1
-                    profiler.record_end(layer=2, record_id=0)
-            else:
-                for j in range(1000):
-                    profiler.record_start(layer=2, record_id=1, message="双数循环")
-                    j + 1
-                    profiler.record_end(layer=2, record_id=1)
-            profiler.record_end(layer=1, record_id=0)
-
-    profiler.record_start(layer=0, record_id=0, message="func")
-    func()
-    profiler.record_end(layer=0, record_id=0)
+    def _print_status(self):
+        elapsed_time = time.time() - self.start_time
+        if self.total:
+            progress = self.current_count / self.total 
+            total_length = self.bar_total_length
 
 
-    print(profiler)
+            status = f'{self.indent}{self.desc} {self.current_count}/{self.total} {self.unit} '
+            if self.bar_total_length:
+                completed_length = int(total_length * progress)
+                remaining_length = total_length - completed_length
+                
+                progress_bar = '[' + '=' * completed_length + ' ' * remaining_length + ']'
+                status += f'{progress_bar} {progress * 100:.2f}% '
+            status += f'[{elapsed_time:.2f}s]'
+        else:
+            status = f'{self.indent}{self.desc} {self.current_count} {self.unit} '
+            status += f'[{elapsed_time:.2f}s]'
+
+        sys.stdout.write('\r')
+        sys.stdout.write(status)
+        self.last_printed_len = len(status)
+        if self.finished:
+            sys.stdout.write('\n')
+
+    def __enter__(self):
+        return iter(self)
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        if not self.finished:
+            self.current_count = self.total
+            self.finished = True
+
+if __name__ == '__main__':
+    for i in MyTqdm(list(range(100))):
+        time.sleep(0.001)
+
+

@@ -338,7 +338,7 @@ def brogue_attachHallwayTo(grid: array2d[int], door_positions: list[list[int, 2]
     
     # 四个方向的门都不符合条件,那么就返回吧
     if direction_index == -1:
-        return 
+        return [[-1,-1], [-1,-1], [-1,-1], [-1,-1]]
     
     # 生成垂直方向的走廊
     if direction_index in [0, 1]:  # 0,1表示"上,下"方向的direction_index
@@ -595,7 +595,6 @@ def brogue_design_large_east_west_cavern(grid: array2d):
 
 def brogue_design_cave(grid: array2d):
     assert grid.width >= CAVE_MIN_WIDTH and grid.height >= CAVE_MIN_HEIGHT
-    print(CAVE_MIN_WIDTH, grid.width-2, CAVE_MIN_HEIGHT, grid.height-2)
     _brogue_designCavern(grid, CAVE_MIN_WIDTH, grid.width-2, CAVE_MIN_HEIGHT, grid.height-2)
 
 
@@ -916,7 +915,5 @@ def brogue_designRandomRoom(grid:array2d[int], room_type_frequencies=(1,1,1,1,1,
         # 生成走廊
         if has_hallway:
             door_positions = brogue_attachHallwayTo(grid, door_positions)
-    
-    
-    test_tools.print_grid(grid)
+            
     return door_positions
