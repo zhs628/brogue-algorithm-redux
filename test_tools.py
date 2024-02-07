@@ -174,7 +174,7 @@ def test_all_rooms(
         else:
             if is_pkpy:
                 res_list = []
-                for arg in MyTqdm(args, desc="测试规模: ", indent="\t  "):
+                for arg in MyTqdm(args, desc="测试规模: ", indent="\t "):
                     res_list.append(_test(arg))
             else:
                 from tqdm import tqdm
@@ -295,22 +295,24 @@ class MyTqdm:
     def __next__(self):
         if self.current_count == 0:
             self._print_status()
+            self.last_printed_time = time.time()
 
         value = next(self.iterator)
-        
-        can_print = True
-        if time.time() - self.last_printed_time < self.print_time_sep:
-            can_print = False
-        
+
         if value == StopIteration:
             self.finished = True
-            if can_print:
-                self._print_status()
+
+        if not self.finished:
+            self.current_count += 1
+
+        if time.time() - self.last_printed_time >= self.print_time_sep:
+            self._print_status()
+            self.last_printed_time = time.time()
+
+        if self.finished:
+            self._print_status()
             return value
         else:
-            self.current_count += 1
-            if can_print:
-                self._print_status()
             return value
 
 
