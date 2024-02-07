@@ -718,23 +718,23 @@ def _brogue_createBlobOnGrid(
             
             for cell_x in range(grid.width):
                 for cell_y in range(grid.height):
-                    neighbor_survived_num = live_neighbors[cell_x, cell_y]
-                    
                     # 计算本轮迭代中该格子的细胞的命运
-                    will_birth = \
-                        last_grid[cell_x, cell_y] == dead_value \
-                        and birth_parameters[neighbor_survived_num] == 't'
-                        
-                    will_survive = \
-                        last_grid[cell_x, cell_y] == survival_value \
-                        and survival_parameters[neighbor_survived_num] == 't'
-                    
-                    if will_birth:
-                        grid[cell_x, cell_y] = survival_value
-
-                    if not will_survive:
+                    nb_count = live_neighbors[cell_x, cell_y]
+                    last_value = last_grid[cell_x, cell_y]
+                    # 原作实现：
+                    # if (!buffer2[i][j] && birthParameters[nbCount] == 't') {
+                    #     grid[i][j] = 1; // birth
+                    # } else if (buffer2[i][j] && survivalParameters[nbCount] == 't') {
+                    #     // survival
+                    # } else {
+                    #     grid[i][j] = 0; // death
+                    # }
+                    if last_value == dead_value and birth_parameters[nb_count] == 't':
+                        grid[cell_x, cell_y] = survival_value   # birth
+                    elif last_value == survival_value and survival_parameters[nb_count] == 't':
+                        pass    # survival
+                    else:
                         grid[cell_x, cell_y] = dead_value
-        
         
         now_id = 0  # 每个块的新填充值, 每找到一个块,就加一
         blob_list = []  
