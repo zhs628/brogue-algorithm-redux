@@ -21,14 +21,12 @@ def is_in_dungeon(x:int, y:int) -> bool:
     return x >= 0 and x < DUNGEON_WIDTH and y >= 0 and y < DUNGEON_HEIGHT
 
 
-
 def insert_room_to_grid(grid: array2d, room_grid: array2d, delta_x:int, delta_y:int, start_x:int, start_y:int):
     '''
     复制room_grid的一个相连的图案到grid中, 在room_grid中的点(x,y)将通过(x + delta_x, y + delta_y)映射到grid中
-    设置start_x, start_y来选择room_grid中将被复制的相连图案的任意内点
+    设置start_x, start_y来选择room_grid中将被复制的相连图案的任意内点或相邻点
     '''
-    fill_value = room_grid[start_x, start_y]
-    grid[start_x+delta_x, start_y+delta_y] = fill_value
+    grid[start_x+delta_x, start_y+delta_y] = ONE
     edge_neighbor_pos_list = [
         [start_x, start_y - 1],
         [start_x, start_y + 1],
@@ -45,13 +43,13 @@ def insert_room_to_grid(grid: array2d, room_grid: array2d, delta_x:int, delta_y:
         if not grid.is_valid(next_x+delta_x, next_y+delta_y):
             continue
         # 判断下一个点的目标点是否是已被复制的点
-        if grid[next_x+delta_x, next_y+delta_y] == fill_value:
+        if grid[next_x+delta_x, next_y+delta_y] == ONE:
             continue
         
-        if room_grid[next_x, next_y] == fill_value:
+        if room_grid[next_x, next_y] == ONE:
             insert_room_to_grid(grid, room_grid, delta_x, delta_y, next_x, next_y)
-
-
+    
+    
 
 
 def flood_fill(grid: array2d[int], fill_value, target_value, start_x=0, start_y=0):

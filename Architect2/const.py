@@ -24,11 +24,15 @@ ROOM_TYPE_COUNT = 8
 CAVE_MIN_WIDTH = 50
 CAVE_MIN_HEIGHT = 20
 
+# attachRooms中生成房间的总尝试次数和房间的最大数量, 原作设定是(总尝试次数<=35, 生成的总数量<=35)
+ATTACH_ROOMS_ATTEMPT_COUNT = 35
+ATTACH_ROOMS_MAX_COUNT = 35
+
 
 '''
 下面是Level.py的常量,用于控制一层的生成
 '''
-from abc import abstractmethod
+# from abc import abstractmethod
 
 
 class DungeonProfile:
@@ -42,7 +46,7 @@ class DungeonProfile:
         self._set_basics()
         self._initialize_by_depth(depth_level, amulet_level)
 
-    @ abstractmethod
+    # @ abstractmethod
     def _set_basics(self):
         pass
     
@@ -76,8 +80,8 @@ class DungeonProfileForBasicRooms(DungeonProfile):
         #  5: 洞穴 (各种Cave)
         #  6: 巨大洞穴 (填满整个地下层的那种大洞穴，Cavern)
         #  7: 入口房间 (位于第一层的大倒 “T” 形房间，Entrance room)
-        #  |
-        #  |
+        #  ||
+        #  ||
         #  L=====>               0   1   2   3   4   5   6   7   
         self.room_frequencies = [2,  1,  1,  1,  7,  1,  0,  0]
         self.corridor_chance = 10  # 意味将有10%的概率生成走廊,也就是说再在附近生成新的房间
@@ -97,8 +101,8 @@ class DungeonProfileForFirstRooms(DungeonProfile):
         #  5: 洞穴 (各种Cave)
         #  6: 巨大洞穴 (填满整个地下层的那种大洞穴，Cavern)
         #  7: 入口房间 (位于第一层的大倒 “T” 形房间，Entrance room)
-        #  |
-        #  |
+        #  ||
+        #  ||
         #  L=====>               0   1   2   3   4   5   6   7   
         self.room_frequencies = [10, 0,  0,  3,  7,  10, 10, 0]
         self.corridor_chance = 0
@@ -118,8 +122,8 @@ class DungeonProfileForGoblinWarrens(DungeonProfile):
         #  5: 洞穴 (各种Cave)
         #  6: 巨大洞穴 (填满整个地下层的那种大洞穴，Cavern)
         #  7: 入口房间 (位于第一层的大倒 “T” 形房间，Entrance room)
-        #  |
-        #  |
+        #  ||
+        #  ||
         #  L=====>               0   1   2   3   4   5   6   7   
         self.room_frequencies = [0,  0,  1,  0,  0,  0,  0,  0]
         self.corridor_chance = 0
@@ -139,8 +143,8 @@ class DungeonProfileForSentinelSanctuaries(DungeonProfile):
         #  5: 洞穴 (各种Cave)
         #  6: 巨大洞穴 (填满整个地下层的那种大洞穴，Cavern)
         #  7: 入口房间 (位于第一层的大倒 “T” 形房间，Entrance room)
-        #  |
-        #  |
+        #  ||
+        #  ||
         #  L=====>               0   1   2   3   4   5   6   7   
         self.room_frequencies = [0,  5,  0,  1,  0,  0,  0,  0]
         self.corridor_chance = 0
