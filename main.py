@@ -18,4 +18,12 @@ import test_tools
 
 grid = array2d(const.DUNGEON_WIDTH, const.DUNGEON_HEIGHT, None)
 Level.brogue_carveDungeon(grid, 5, 10)
+
+# 给grid进行描边，描边数值为6
+neighbors = grid.count_neighbors(1)
+for i in range(grid.width):
+    for j in range(grid.height):
+        if grid[i, j] == 0 and neighbors[i, j] > 0:
+            grid[i, j] = 6
+
 test_tools.print_grid(grid)

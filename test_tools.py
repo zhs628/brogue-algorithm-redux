@@ -57,6 +57,7 @@ def print_grid(grid: array2d[int], symbols=".+#@", message="--------------------
         1: ("1", 0, 41),
         2: ("2", 0, 42),
         3: ("3", 0, 43),
+        6: ("6", 0, 35),
     }
 
     print(message)
