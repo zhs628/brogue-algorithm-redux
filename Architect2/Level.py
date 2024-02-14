@@ -112,6 +112,8 @@ def brogue_attachRooms(grid:array2d[int], room_profile:DungeonProfile, attempt_c
             
             # 已经经被放置了房间, 那么就不想需要继续搜索适合放置该房间的位置了
             break
+
+        test_tools.print_grid_debug(grid)
         
         # 总尝试次数+1
         attemped_time += 1
@@ -131,6 +133,8 @@ def brogue_carveDungeon(grid:array2d[int], depth_level:int, amulet_level:int):
         has_doors=False, 
         has_hallway=False
         )
+    
+    test_tools.print_grid_debug(grid)
 
     
     # 接着不断生成其余的房间

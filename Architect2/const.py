@@ -39,7 +39,7 @@ class DungeonProfile:
     '''
     房间的生成概率配置类, 它决定了该房间的样式
     '''
-    room_frequencies: list[float, ROOM_TYPE_COUNT]  # 房间生成概率列表
+    room_frequencies: list[float]  # 房间生成概率列表
     corridor_chance: float  # 走廊的生成概率 0~100
     def __init__(self, depth_level, amulet_level):
 

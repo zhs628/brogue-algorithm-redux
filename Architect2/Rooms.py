@@ -848,29 +848,6 @@ def brogue_designRandomRoom(grid:array2d[int], room_type_frequencies:list[float]
     Returns:
         (list[list[int, 2], 4]): 表示 走廊出口/门 的位置
     '''
-    # 根据 room_type_frequencies 采用轮盘赌选择房间类型
-    assert len(room_type_frequencies) == ROOM_TYPE_COUNT
-    room_type_func_index = -1
-    #     累加权重以创建权重累积列表
-    cumulative_weights = []
-    total_sum = 0
-    for w in room_type_frequencies:
-        assert w >= 0  # 每一个权重必须是非负数
-        total_sum += w
-        cumulative_weights.append(total_sum)
-
-    #     生成一个0到总权重累积之间的随机数
-    r = random.uniform(0, total_sum)
-
-    #     找到随机数所在的权重区间
-    for index, cumulative_weight in enumerate(cumulative_weights):
-        if r < cumulative_weight:
-            room_type_func_index = index
-            break  # 返回该区间对应的原始权重列表的索引
-    
-    # 必须找到一个合法的房间类型索引
-    assert room_type_func_index >= 0 and room_type_func_index < ROOM_TYPE_COUNT
-    
     # 生成房间
     room_type_func_list = [
         brogue_designCrossRoom,
@@ -886,7 +863,8 @@ def brogue_designRandomRoom(grid:array2d[int], room_type_frequencies:list[float]
         brogue_design_cave,
         brogue_designEntranceRoom
     ]
-    selected_element = room_type_func_list[room_type_func_index]
+    # 按权重选取房间生成函数
+    selected_element = random.choices(room_type_func_list, room_type_frequencies)[0]
     if isinstance(selected_element, list):  # 选中了cavern, 那么进一步选择生成什么cavern
         room_type_func = random.choice(selected_element)
     else:

@@ -1,1 +1,0 @@
-pkpy.exe main.py

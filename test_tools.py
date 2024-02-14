@@ -29,7 +29,12 @@ def _random_selection(original_list, ratio):
         selected_elements.add(selected_element)
     return list(selected_elements)
 
-def print_grid(grid: array2d[int], symbols=".+#@", message="------------------------"):
+
+def print_grid_debug(*args, **kwargs):
+    print_grid(*args, **kwargs)
+    input("Press Enter to continue...")
+
+def print_grid(grid: array2d[int], message="------------------------", finish_walls=True):
 # https://gist.github.com/fnky/458719343aabd01cfb17a3a4f7296797
 # Color Name	    Foreground Color Code	Background Color Code
 # Black	            30	                    40
@@ -59,6 +64,15 @@ def print_grid(grid: array2d[int], symbols=".+#@", message="--------------------
         3: ("3", 0, 43),
         6: ("6", 0, 35),
     }
+
+    if finish_walls:
+        grid = grid.copy()
+        # 给grid进行描边，描边数值为6
+        neighbors = grid.count_neighbors(1)
+        for i in range(grid.width):
+            for j in range(grid.height):
+                if grid[i, j] == 0 and neighbors[i, j] > 0:
+                    grid[i, j] = 6
 
     print(message)
     for y in range(grid.height):
