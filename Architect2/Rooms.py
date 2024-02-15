@@ -4,6 +4,7 @@
 
 
 from array2d import array2d
+from typing import Callable
 import random
 from . import SimpleShapes
 import test_tools
@@ -21,6 +22,15 @@ def is_in_dungeon(x:int, y:int) -> bool:
     return x >= 0 and x < DUNGEON_WIDTH and y >= 0 and y < DUNGEON_HEIGHT
 
 
+
+"""
+
+. . . .
+. 1 1 .
+. 1 . .
+. . . .
+
+"""
 def insert_room_to_grid(grid: array2d, room_grid: array2d, delta_x:int, delta_y:int, start_x:int, start_y:int):
     '''
     复制room_grid的一个相连的图案到grid中, 在room_grid中的点(x,y)将通过(x + delta_x, y + delta_y)映射到grid中
@@ -93,6 +103,12 @@ def _flood_fill_inner_func(grid: array2d[int], fill_value, target_value, start_x
     return filled_cell_count + 1  # 将递归结果添加到 filled_cell_count 中并返回
 
 
+"""
+? 1 ?
+. 2 .
+? 1 ?
+"""
+
 # 下面是生成门的逻辑---------------------------------------------------
 def brogue_directionOfDoorSite(grid:array2d[int], door_x:int, door_y:int):
     '''
@@ -108,62 +124,47 @@ def brogue_directionOfDoorSite(grid:array2d[int], door_x:int, door_y:int):
     我们希望生成于(door_x,door_y)的门能够不被阻挡地向一个空的方向打开, 并保证门的背后就是房间, 还需保证一个门仅有唯一的可选打开方向
     
     本算法在理论上, 只有这一种情况是可以生成门的:  
-                            ? ■ ?
-                              +     问号可以是任意格子,加号是(door_X,door_Y), 实心方块是房间格子(值为1), 此时门的朝向为(door_x, door_y)的下方, 函数将返回1
+                            ? 1 ?
+                            . 2 .   问号可以是任意格子,加号是(door_X,door_Y), 实心方块是房间格子(值为1), 此时门的朝向为(door_x, door_y)的下方, 函数将返回1
     下面的情况都无法生成门:
         1. 2个及以上邻边都有打开门的条件:
-                ■ ■
-                + ■   此处因为下侧和左侧都符合打开门的条件, 因此这一格不能生成门, 必须仅有一侧能够打开门, 才符合最终条件
-                
+              . 1 1
+              . 2 1   此处因为下侧和左侧都符合打开门的条件, 因此这一格不能生成门, 必须仅有一侧能够打开门, 才符合最终条件
+              . . .
         2. 门的打开方向是地图边界:
-            \\|   ■
-            \\| + ■ <-- 此处因为其对称点在地图边界外, 因此不能生成门
-            \\|   ■
+            \\| . 1
+            \\| 2 1 <-- 此处因为其对称点在地图边界外, 因此不能生成门
+            \\| . 1
     
     '''
     
-    # 门不能生成在房间内,而至少是房间边缘的外侧一格
+    # 门不能生成在房间内，而至少是房间边缘的外侧一格
     if grid[door_x, door_y] == ONE:
         return -1 # no direction
     
     edge_neighbor_pos_list = [
-        [door_x, door_y - 1],
-        [door_x, door_y + 1],
-        [door_x - 1, door_y],
-        [door_x + 1, door_y],
+        (door_x, door_y - 1),       # 上
+        (door_x, door_y + 1),       # 下
+        (door_x - 1, door_y),       # 左
+        (door_x + 1, door_y),       # 右
     ]
-    
-    # -1  no direction
-    direction_index_list = [
-        0,  # up
-        1,  # down
-        2,  # left
-        3   # right
-    ]
-    
     
     selected_direction_index = -1
-    for direction, neighbor_pos in list(zip(direction_index_list, edge_neighbor_pos_list)):
-        neighbor_x, neighbor_y = neighbor_pos
-        
+    for direction in [0, 1, 2, 3]:
+        neighbor_x, neighbor_y = edge_neighbor_pos_list[direction]
+        # TODO: grid[neighbor_x, neighbor_y] 需要满足什么条件？
+        if not grid.is_valid(neighbor_x, neighbor_y):
+            continue
         # 以(door_x, door_y)为中心, 计算其对称点的坐标
         opposite_x = door_x - (neighbor_x - door_x)
         opposite_y = door_y - (neighbor_y - door_y)
-        
-        # 无法满足这些条件的方位, 将不能打开门, 因此跳过
-        if not grid.is_valid(neighbor_x, neighbor_y) or not grid.is_valid(opposite_x, opposite_y):
-            continue
         # 如果对称点不是房间格子, 则不能打开门, 因此跳过
-        if grid[opposite_x, opposite_y] != ONE:
+        if grid.get(opposite_x, opposite_y) != ONE:
             continue
-        
         # 发现不止一处可以打开门的方向, 则无法生成门
         if selected_direction_index != -1:
             return -1 # no direction
-
         selected_direction_index = direction
-    
-
     return selected_direction_index
 
 def brogue_chooseRandomDoorSites(grid: array2d[int]):
@@ -836,7 +837,7 @@ def _brogue_createBlobOnGrid(
 
 
 # 以上所有房间生成算法的调用者, 将从以上房间中随机选择一个生成, 并生成走廊并返回走廊出口----------------------------
-def brogue_designRandomRoom(grid:array2d[int], room_type_frequencies:list[float]=(1,1,1,1,1,1,1,1), has_doors:bool=True, has_hallway:bool=True):
+def brogue_designRandomRoom(grid:array2d[int], room_type_frequencies=(1,1,1,1,1,1,1,1), has_doors:bool=True, has_hallway:bool=True):
     '''
     在grid中就地生成一个随机的房间, 附加上走廊并返回走廊出口
     
@@ -848,7 +849,6 @@ def brogue_designRandomRoom(grid:array2d[int], room_type_frequencies:list[float]
     Returns:
         (list[list[int, 2], 4]): 表示 走廊出口/门 的位置
     '''
-    # 生成房间
     room_type_func_list = [
         brogue_designCrossRoom,
         brogue_designSymmetricalCrossRoom,
@@ -864,14 +864,13 @@ def brogue_designRandomRoom(grid:array2d[int], room_type_frequencies:list[float]
         brogue_designEntranceRoom
     ]
     # 按权重选取房间生成函数
-    selected_element = random.choices(room_type_func_list, room_type_frequencies)[0]
-    if isinstance(selected_element, list):  # 选中了cavern, 那么进一步选择生成什么cavern
-        room_type_func = random.choice(selected_element)
-    else:
-        room_type_func = selected_element
+    f = random.choices(room_type_func_list, room_type_frequencies)[0]
+    # 选中了cavern, 那么进一步选择生成什么cavern
+    if isinstance(f, list):
+        f = random.choice(f)
     
     # 生成房间
-    room_type_func(grid)
+    f(grid)
     
     # 生成门
     door_positions = [[-1,-1], [-1,-1], [-1,-1], [-1,-1]]

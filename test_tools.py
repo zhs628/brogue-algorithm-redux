@@ -31,6 +31,7 @@ def _random_selection(original_list, ratio):
 
 
 def print_grid_debug(*args, **kwargs):
+    return
     print_grid(*args, **kwargs)
     input("Press Enter to continue...")
 
