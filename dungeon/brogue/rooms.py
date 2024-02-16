@@ -6,51 +6,44 @@ from dungeon.brogue.const import *
 
 
 # 在本文件中, 完全复刻自brogue的算法将使用 "brogue_<brogue中该函数的原名>" 命名
-def clamp(x, low, hi):
-    '''
-    将x限制在区间[low, hi]内
-    '''
-    return min(max(x, low), hi)
-
-
-def is_in_dungeon(x:int, y:int) -> bool:
-    return x >= 0 and x < DUNGEON_WIDTH and y >= 0 and y < DUNGEON_HEIGHT
+def clamp(x, a, b):
+    if a > b: a, b = b, a
+    if x < a: return a
+    if x > b: return b
+    return x
 
 
 """
-
 . . . .
 . 1 1 .
 . 1 . .
 . . . .
-
 """
-def insert_room_to_grid(grid: array2d, room_grid: array2d, delta_x:int, delta_y:int, start_x:int, start_y:int):
+
+
+
+def insert_room_to_grid(grid: array2d, room_grid: array2d, delta_x: int, delta_y: int, x: int, y: int):
     '''
-    复制room_grid的一个相连的图案到grid中, 在room_grid中的点(x,y)将通过(x + delta_x, y + delta_y)映射到grid中
-    设置start_x, start_y来选择room_grid中将被复制的相连图案的任意内点或相邻点
+    复制`room_grid`的一个连通的图案到`grid`中, 在`room_grid`中的点`(x, y)`将通过`(x + delta_x, y + delta_y)`映射到`grid`中
+    设置`(x, y)`来选择`room_grid`中将被复制的图案的内点或相邻点
     '''
-    grid[start_x+delta_x, start_y+delta_y] = ONE
-    edge_neighbor_pos_list = [
-        [start_x, start_y - 1],
-        [start_x, start_y + 1],
-        [start_x - 1, start_y],
-        [start_x + 1, start_y],
-    ]
-    # 注意循环变量所指代的那个坐标一直都是在room_grid中的点
-    for next_x, next_y in edge_neighbor_pos_list:
-        
-        # 判断下一个点是否在room_grid中
-        if not room_grid.is_valid(next_x, next_y):
+    grid[x+delta_x, y+delta_y] = ONE
+
+    for dir_x, dir_y in DIRS_4:
+        # room_grid中的下一个点
+        next_x = x + dir_x
+        next_y = y + dir_y
+
+        # 判断下一个点是否在room_grid中，且为房间格子
+        if room_grid.get(next_x, next_y) != ONE:
             continue
-        # 判断下一个点的目标点是否在grid中
-        if not grid.is_valid(next_x+delta_x, next_y+delta_y):
-            continue
-        # 判断下一个点的目标点是否是已被复制的点
-        if grid[next_x+delta_x, next_y+delta_y] == ONE:
-            continue
-        
-        if room_grid[next_x, next_y] == ONE:
+
+        # grid中的目标点
+        target_x = next_x + delta_x
+        target_y = next_y + delta_y
+
+        # 目标点必须是空的合法点
+        if grid.get(target_x, target_y) == ZERO:
             insert_room_to_grid(grid, room_grid, delta_x, delta_y, next_x, next_y)
     
     
@@ -604,7 +597,6 @@ def _brogue_designCavern(
     survival_parameters = "ffffttttt"
     blob_x, blob_y, blob_w, blob_h = _brogue_createBlobOnGrid(blob_grid, min_width, max_width, min_height, max_height, round_count, noise_probability, birth_parameters, survival_parameters)
     
-    
     # 下面将生成的块从blob_grid中复制到grid中
     
     # 遍历块的外接矩形, 寻找块中的一个内点
@@ -666,12 +658,6 @@ def _brogue_createBlobOnGrid(
     '''
     
     survival_value, dead_value = -1, -2
-    neighbor_cell_delta_list = [
-        [-1,-1], [ 0,-1], [ 1,-1],
-        [-1, 0],          [ 1, 0],
-        [-1, 1], [ 0, 1], [ 1, 1]
-    ]
-    
     TIME_OUT_LOOP = 10000
     loop_count = 0
     while True:
@@ -831,7 +817,7 @@ def _brogue_createBlobOnGrid(
 
 
 # 以上所有房间生成算法的调用者, 将从以上房间中随机选择一个生成, 并生成走廊并返回走廊出口----------------------------
-def brogue_designRandomRoom(grid:array2d[int], room_type_frequencies=(1,1,1,1,1,1,1,1), has_doors:bool=True, has_hallway:bool=True):
+def brogue_designRandomRoom(grid: array2d[int], room_type_frequencies=(1,1,1,1,1,1,1,1), has_doors=True, has_hallway=True):
     '''
     在grid中就地生成一个随机的房间, 附加上走廊并返回走廊出口
     

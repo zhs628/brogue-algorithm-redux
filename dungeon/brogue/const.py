@@ -28,6 +28,8 @@ CAVE_MIN_HEIGHT = 20
 ATTACH_ROOMS_ATTEMPT_COUNT = 35
 ATTACH_ROOMS_MAX_COUNT = 35
 
+IS_DEBUG = True
+
 
 '''
 下面是Level.py的常量,用于控制一层的生成
@@ -148,3 +150,5 @@ class DungeonProfileForSentinelSanctuaries(DungeonProfile):
         #  L=====>               0   1   2   3   4   5   6   7   
         self.room_frequencies = [0,  5,  0,  1,  0,  0,  0,  0]
         self.corridor_chance = 0
+
+DIRS_4 = [(0, -1), (0, 1), (-1, 0), (1, 0)]
