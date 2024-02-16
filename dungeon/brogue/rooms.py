@@ -447,7 +447,7 @@ def brogue_designCrossRoom(grid: array2d[int]):
     room2_height = random.randint(2, 5)
     room2_y =                                           \
         grid.height//2 -                                \
-        room2_height -                                  \
+        room2_height +                                  \
         random.choice([0, -1,-1, -2,-2, -3])            
     
     # 将房间整体向左下角偏移
