@@ -22,3 +22,7 @@ def count_connected_components(grid: array2d, value) -> int:
                         queue.append((nx, ny))
                         visited[nx, ny] = True
     return count
+
+def trim_bounding_rect(grid: array2d, value):
+    x, y, w, h = grid.find_bounding_rect(value)
+    return grid[x:x+w, y:y+h]

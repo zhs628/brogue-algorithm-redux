@@ -7,6 +7,7 @@ import random
 from dungeon.brogue.const import *
 from dungeon.brogue import rooms as Rooms
 from dungeon import test_tools
+from dungeon.algorithm.grid import trim_bounding_rect
 
 def room_fits_at(grid: array2d[int], room_grid: array2d[int], delta_x:int, delta_y:int):
     '''
@@ -78,9 +79,12 @@ def brogue_attachRooms(grid:array2d[int], room_profile:DungeonProfile, max_attem
             if opposite_door_position == [-1, -1]:
                 # 确保门可以双向打开
                 continue
+
+            # opposite_door_position 与 (x, y) 最终映射为同一个点，即门的位置
             
             delta_x_for_opposite_door = x-opposite_door_position[0]
             delta_y_for_opposite_door = y-opposite_door_position[1]
+            # 预先判断插入是完整的
             if not room_fits_at(grid, roomMap, delta_x_for_opposite_door, delta_y_for_opposite_door):
                 continue
 
@@ -91,8 +95,9 @@ def brogue_attachRooms(grid:array2d[int], room_profile:DungeonProfile, max_attem
                 delta_x_for_opposite_door, delta_y_for_opposite_door, 
                 opposite_door_position[0], opposite_door_position[1]
             )
+
             # 并将位置(x,y)标记为房间的门, 使用2表示门
-            grid[x,y] = 2
+            grid[x,y] = TWO
             rooms += 1
             
             # 已经经被放置了房间, 那么就不想需要继续搜索适合放置该房间的位置了

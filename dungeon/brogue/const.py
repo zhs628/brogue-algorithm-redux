@@ -10,6 +10,14 @@
 # 使用全局常量来表示格子的填充值，方便以后统一修改
 ONE = 1
 ZERO = 0
+TWO = 2
+THREE = 3
+FOUR = 4
+FIVE = 5
+SIX = 6
+SEVEN = 7
+EIGHT = 8
+NINE = 9
 # 地牢的总的地图的尺寸, 原作设定是(w:79, h:29)
 DUNGEON_WIDTH = 79  
 DUNGEON_HEIGHT = 29

@@ -2,6 +2,7 @@ from array2d import array2d
 import random
 
 from dungeon.algorithm.shapes import draw_circle, draw_rectangle
+from dungeon.algorithm.grid import count_connected_components, trim_bounding_rect
 from dungeon.brogue.const import *
 
 
@@ -27,8 +28,9 @@ def insert_room_to_grid(grid: array2d, room_grid: array2d, delta_x: int, delta_y
     复制`room_grid`的一个连通的图案到`grid`中, 在`room_grid`中的点`(x, y)`将通过`(x + delta_x, y + delta_y)`映射到`grid`中
     设置`(x, y)`来选择`room_grid`中将被复制的图案的内点或相邻点
     '''
+    # room_grid有且仅有一个连通分量
+    assert count_connected_components(room_grid, ONE) == 1
     grid[x+delta_x, y+delta_y] = ONE
-
     for dir_x, dir_y in DIRS_4:
         # room_grid中的下一个点
         next_x = x + dir_x
@@ -378,7 +380,7 @@ def brogue_designCircularRoom(grid: array2d[int]):
     '''
     assert grid.width >= 21 and grid.height >= 21 
     
-    grid.fill_(0)  # 以0填充所有的格子
+    grid.fill_(ZERO)  # 以0填充所有的格子
 
     center_x = grid.width//2
     center_y = grid.height//2
@@ -576,16 +578,10 @@ def brogue_design_cave(grid: array2d):
 
 
 # ----------- _brogue_designCavern 为原作函数, 以上为原作中调用该函数的四个地方
-def _brogue_designCavern(
-    grid: array2d[int],      
-    min_width: int,  # 房间的生成限宽和限高
-    max_width: int, 
-    min_height: int, 
-    max_height: int \
-    ):
-    '''
+def _brogue_designCavern(grid: array2d[int], min_width: int, max_width: int, min_height: int, max_height: int):
+    """
     使用元胞自动机生成限定规格的一块洞穴样式的房间
-    '''
+    """
     assert min_width <= max_width and min_height <= max_height
     
     grid.fill_(ZERO)
@@ -598,23 +594,12 @@ def _brogue_designCavern(
     blob_x, blob_y, blob_w, blob_h = _brogue_createBlobOnGrid(blob_grid, min_width, max_width, min_height, max_height, round_count, noise_probability, birth_parameters, survival_parameters)
     
     # 下面将生成的块从blob_grid中复制到grid中
-    
-    # 遍历块的外接矩形, 寻找块中的一个内点
-    inside_x, inside_y = None, None
-    for y in range(blob_y, blob_y + blob_h):
-        has_found = False
-        for x in range(blob_x, blob_x + blob_w):
-            if blob_grid[x,y] == 1:
-                inside_x, inside_y = x, y
-                has_found = True
-                break
-        if has_found:
-            break
-    
-    # 移动块的中心点到grid的中心点
-    delta_x = (grid.width - blob_w)//2 - blob_x
-    delta_y = (grid.height - blob_h)//2 - blob_y
-    insert_room_to_grid(grid, blob_grid, delta_x, delta_y, inside_x, inside_y)
+    blob_grid = blob_grid[blob_x:blob_x+blob_w, blob_y:blob_y+blob_h]
+
+    # 把blob_grid复制到grid的中心
+    grid_x = (grid.width - blob_w) // 2
+    grid_y = (grid.height - blob_h) // 2
+    grid[grid_x: grid_x+blob_w, grid_y: grid_y+blob_h] = blob_grid
 
 
 
@@ -819,7 +804,7 @@ def _brogue_createBlobOnGrid(
 # 以上所有房间生成算法的调用者, 将从以上房间中随机选择一个生成, 并生成走廊并返回走廊出口----------------------------
 def brogue_designRandomRoom(grid: array2d[int], room_type_frequencies=(1,1,1,1,1,1,1,1), has_doors=True, has_hallway=True):
     '''
-    在grid中就地生成一个随机的房间, 附加上走廊并返回走廊出口
+    在空的grid中就地生成一个随机的房间, 附加上走廊并返回走廊出口
     
     Args:
         grid (array2d[int]): 二维数组表示地图的网格，应当为地牢的总地图尺寸。
