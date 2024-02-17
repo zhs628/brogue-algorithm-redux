@@ -7,7 +7,6 @@ import random
 from dungeon.brogue.const import *
 from dungeon.brogue import rooms as Rooms
 from dungeon import test_tools
-from dungeon.algorithm.grid import trim_bounding_rect
 
 def room_fits_at(grid: array2d[int], room_grid: array2d[int], delta_x:int, delta_y:int):
     '''
