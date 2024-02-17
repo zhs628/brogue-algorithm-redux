@@ -1,6 +1,6 @@
 from array2d import array2d
 
-from .utils import brogue_chooseRandomDoorSites, brogue_attachHallwayTo, brogue_directionOfDoorSite, insert_room_to_grid
+from .utils import brogue_chooseRandomDoorSites, brogue_attachHallwayTo, brogue_directionOfDoorSite
 from .simple import *
 from .cavern import *
 

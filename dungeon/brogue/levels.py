@@ -6,15 +6,19 @@ import random
 
 from dungeon.brogue.const import *
 from dungeon.brogue import rooms as Rooms
+from dungeon.algorithm.grid import count_connected_components
 from dungeon import test_tools
 
 
+def try_map_room_to_grid_(grid: array2d[int], room_grid: array2d[int], delta_x: int, delta_y: int) -> bool:
+    """尝试将`room_grid`中的格子映射到`grid`中
 
-def room_fits_at(grid: array2d[int], room_grid: array2d[int], delta_x:int, delta_y:int):
-    '''
-    判断 room_grid 中的房间在被映射到 grid 中后, 是否不与其他房间重叠并距离边界大于一格的距离
-    映射规则: 设(x,y)是房间格子在 room_grid 中的位置, 那么它被映射到grid中的位置是(x+delta_x, y+delta_y)
-    '''
+    设`(x, y)`是房间格子在`room_grid`中的位置, 那么它被映射到`grid`中的位置是`(x+delta_x, y+delta_y)`
+    
+    如果满足条件，且映射后不与其他房间重叠，并距离边界大于一格的距离，则返回`True`，否则返回`False`
+    """
+    assert count_connected_components(room_grid, ONE) == 1
+    modified_grid = grid.copy()
     # 预先求出 grid 中每个格子周围的 ZERO 的数量
     grid_zero_neighbors = grid.count_neighbors(ZERO)
 
@@ -23,18 +27,20 @@ def room_fits_at(grid: array2d[int], room_grid: array2d[int], delta_x:int, delta
             # 我们只需要挑出属于房间的格子并进行判断, 以保证房间在被移动到 grid 时是完整的并距离边界保持一格的距离
             if room_grid[room_x, room_y] != ONE:
                 continue
-            
             # 偏移后的房间格子在 grid 中的位置
             grid_x = room_x + delta_x
             grid_y = room_y + delta_y
-
-            if not grid.is_valid(grid_x, grid_y):
-                # 房间格子在 grid 中的位置已经超出了 grid 的范围
+            if grid.get(grid_x, grid_y) != ZERO:
+                # 房间格子在 grid 中的位置被占用或不合法
+                return False
+            if grid_zero_neighbors[grid_x, grid_y] < 8:
+                # 房间格子在距离边界小于一格
                 return False
 
-            if grid_zero_neighbors[grid_x, grid_y] < 8 or grid[grid_x, grid_y] != ZERO:
-                # 房间格子在 grid 中的位置已经被占用, 或者距离边界小于一格
-                return False
+            modified_grid[grid_x, grid_y] = ONE
+
+    # 房间在 grid 中的位置是合法的
+    grid.copy_(modified_grid)
     return True
     
 
@@ -83,24 +89,15 @@ def brogue_attachRooms(grid:array2d[int], room_profile:DungeonProfile, max_attem
 
             # opposite_door_position 与 (x, y) 最终映射为同一个点，即门的位置
             
-            delta_x_for_opposite_door = x-opposite_door_position[0]
-            delta_y_for_opposite_door = y-opposite_door_position[1]
-            # 预先判断插入是完整的
-            if not room_fits_at(grid, room_map, delta_x_for_opposite_door, delta_y_for_opposite_door):
+            delta_x = x - opposite_door_position[0]
+            delta_y = y - opposite_door_position[1]
+            # 尝试插入房间
+            if not try_map_room_to_grid_(grid, room_map, delta_x, delta_y):
                 continue
-
-            # 满足上述条件, 则将暂存在 roomMap 中的房间插入到地图
-            Rooms.insert_room_to_grid(
-                grid, 
-                room_map, 
-                delta_x_for_opposite_door, delta_y_for_opposite_door, 
-                opposite_door_position[0], opposite_door_position[1]
-            )
 
             # 并将位置(x,y)标记为房间的门, 使用2表示门
             grid[x,y] = TWO
             rooms += 1
-            
             # 已经经被放置了房间, 那么就不想需要继续搜索适合放置该房间的位置了
             break
 

@@ -15,42 +15,6 @@ def clamp(x, a, b):
     if x > b: return b
     return x
 
-
-"""
-. . . .
-. 1 1 .
-. 1 . .
-. . . .
-"""
-
-
-
-def insert_room_to_grid(grid: array2d, room_grid: array2d, delta_x: int, delta_y: int, x: int, y: int):
-    '''
-    复制`room_grid`的一个连通的图案到`grid`中, 在`room_grid`中的点`(x, y)`将通过`(x + delta_x, y + delta_y)`映射到`grid`中
-    设置`(x, y)`来选择`room_grid`中将被复制的图案的内点或相邻点
-    '''
-    # room_grid有且仅有一个连通分量
-    assert count_connected_components(room_grid, ONE) == 1
-    grid[x+delta_x, y+delta_y] = ONE
-    for dir_x, dir_y in DIRS_4:
-        # room_grid中的下一个点
-        next_x = x + dir_x
-        next_y = y + dir_y
-
-        # 判断下一个点是否在room_grid中，且为房间格子
-        if room_grid.get(next_x, next_y) != ONE:
-            continue
-
-        # grid中的目标点
-        target_x = next_x + delta_x
-        target_y = next_y + delta_y
-
-        # 目标点必须是空的合法点
-        if grid.get(target_x, target_y) == ZERO:
-            insert_room_to_grid(grid, room_grid, delta_x, delta_y, next_x, next_y)
-
-
 """
 ? 1 ?
 . 2 .

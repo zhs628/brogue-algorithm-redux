@@ -189,6 +189,5 @@ def brogue_designEntranceRoom(grid: array2d[int]):
     room2_x = grid.width // 2 - room2_width // 2 - 1
     room2_y = grid.height - room2_height - 2
 
-    fill_value = ONE
     canvas.fill_rect_(grid, ONE, room1_x, room1_y, room1_width, room1_height)
     canvas.fill_rect_(grid, ONE, room2_x, room2_y, room2_width, room2_height)
