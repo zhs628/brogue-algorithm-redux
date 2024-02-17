@@ -18,13 +18,14 @@ def try_map_room_to_grid_(grid: array2d[int], room_grid: array2d[int], delta_x: 
     
     如果满足条件，且映射后不与其他房间重叠，并距离边界大于一格的距离，则返回`True`，否则返回`False`
     """
-    assert count_connected_components(room_grid, ONE) == 1
     modified_grid = grid.copy()
     # 预先求出 grid 中每个格子周围的 ZERO 的数量
     grid_zero_neighbors = grid.count_neighbors(ZERO)
 
-    for room_y in range(room_grid.height):
-        for room_x in range(room_grid.width):
+    # 用底层算法求一下外接矩形，减少 python 层面循环的次数
+    x_, y_, w_, h_ = room_grid.find_bounding_rect(ONE)
+    for room_y in range(y_, y_+h_):
+        for room_x in range(x_, x_+w_):
             # 我们只需要挑出属于房间的格子并进行判断, 以保证房间在被移动到 grid 时是完整的并距离边界保持一格的距离
             if room_grid[room_x, room_y] != ONE:
                 continue
@@ -57,16 +58,19 @@ def brogue_attachRooms(grid: array2d[int], room_profile: DungeonProfile, max_att
     # 不断尝试生成房间, 直到达到房间数量上限或尝试次数上限
     while attempts < max_attempts and rooms < max_rooms:
         # 生成一个房间并暂存在 roomMap 中
-        room_map = array2d(grid.width, grid.height, default=0)
+        room_grid = array2d(grid.width, grid.height, default=0)
         # 确定是否需要生成走廊
         has_hallway = attempts <= max_attempts-5 and random.random() < room_profile.corridor_chance
         #    door_positions 是一个 list[list[int,2], 4], 其中每个元素是 [x,y], 表示朝一个方向上打开的门的位置, 门打开的方向取决于[x,y]在 door_positions 中的位置
         door_positions = Rooms.brogue_designRandomRoom(
-            room_map, 
+            room_grid, 
             room_profile.room_frequencies,
             has_hallway=has_hallway,        # ?
             has_doors=True
         )
+
+        # 确保房间只有一个连通分量
+        assert count_connected_components(room_grid, ONE) == 1
         
         # 将房间在地图上滑动，直到与墙壁对齐
         # 无序遍历grid, 此处的(x,y)指的是两个房间相互接壤的门的位置
@@ -88,7 +92,7 @@ def brogue_attachRooms(grid: array2d[int], room_profile: DungeonProfile, max_att
             delta_x = x - opposite_door_position[0]
             delta_y = y - opposite_door_position[1]
             # 尝试插入房间
-            if not try_map_room_to_grid_(grid, room_map, delta_x, delta_y):
+            if not try_map_room_to_grid_(grid, room_grid, delta_x, delta_y):
                 continue
 
             # 并将位置(x,y)标记为房间的门, 使用2表示门
