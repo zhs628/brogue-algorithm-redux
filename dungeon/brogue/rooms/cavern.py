@@ -3,6 +3,7 @@ import random
 
 from .utils import flood_fill
 from dungeon.brogue.const import *
+from dungeon.algorithm.grid import find_largest_connected_component
 
 # ---------------------------------洞穴---------------------------------
 # 关于洞穴的生成算法, 程序将不断尝试在max_width, max_height内随机生成块, 而直到块的规格符合要求时才会停止
@@ -40,10 +41,10 @@ def _brogue_designCavern(grid: array2d[int], min_width: int, max_width: int, min
     noise_probability = 0.55
     birth_parameters = "ffffffttt"
     survival_parameters = "ffffttttt"
-    blob_x, blob_y, blob_w, blob_h = _brogue_createBlobOnGrid(blob_grid, min_width, max_width, min_height, max_height, round_count, noise_probability, birth_parameters, survival_parameters)
+    blob_grid = _brogue_createBlobOnGrid(blob_grid, min_width, max_width, min_height, max_height, round_count, noise_probability, birth_parameters, survival_parameters)
     
     # 下面将生成的块从blob_grid中复制到grid中
-    blob_grid = blob_grid[blob_x:blob_x+blob_w, blob_y:blob_y+blob_h]
+    blob_w, blob_h = blob_grid.width, blob_grid.height
 
     # 把blob_grid复制到grid的中心
     grid_x = (grid.width - blob_w) // 2
@@ -63,7 +64,7 @@ def _brogue_createBlobOnGrid(
     noise_probability = 0.55, 
     birth_parameters = 'ffffffttt',  
     survival_parameters = 'ffffttttt' \
-    ):
+    ) -> array2d[int]:
     '''
     本函数利用细胞自动机按照培育参数在给定的空网格之内生成图案, 并返回最大的块在网格中的位置和规格
     
@@ -98,7 +99,7 @@ def _brogue_createBlobOnGrid(
         loop_count += 1
         assert loop_count <= TIME_OUT_LOOP
         
-        grid.fill_(0)
+        grid.fill_(ZERO)
         # ---- 生成初始噪声
         for x in range(blob_max_width):
             for y in range(blob_max_height):
@@ -138,113 +139,10 @@ def _brogue_createBlobOnGrid(
                     else:
                         grid[cell_x, cell_y] = dead_value
         
-        now_id = 0  # 每个块的新填充值, 每找到一个块,就加一
-        blob_list = []  
-        # [
-        #     {
-        #         "id": int,
-        #         "size": int,
-        #     },
-        #     ...
-        # ]
-        
-        # 为每个块填上新的表示编号的填充值, 并记录每个块的尺寸
-        for x in range(grid.width):
-            for y in range(grid.height):
-                
-                # 剔除被赋予blob_id的格子, 以及细胞死亡的格子, 只留下细胞存活的, 没有被赋予blob_id的格子
-                # 注意: 每当一个块首次被遍历时, 它内部所有格子都将被赋予编号
-                if grid[x,y] != survival_value :
-                    continue 
-                
-                
-                fill_value = now_id
-                target_value = survival_value
-                blob_size = flood_fill(grid, fill_value, target_value, start_x=x, start_y=y)
-                blob_list.append(
-                    {
-                        "id": now_id,
-                        "size": blob_size,
-                    }
-                )
-                
-                now_id += 1
-        
-        
-        # 假如啥也没有生成, 就从头来过
-        if not blob_list:
-            continue
-        
-        # 下面开始计算最大的块的外接矩形
-        blob_size_list = []  # [size, size, ...]
-        for dic in blob_list:
-            blob_size_list.append(dic["size"])
-            
-        biggest_blob = {
-            "id": blob_size_list.index(max(blob_size_list)),
-            "size": max(blob_size_list),
-            "min_x": None,
-            "max_x": None,
-            "min_y": None,
-            "max_y": None,
-            "width": None,
-            "height": None
-        }
-        
-        scan_loops = [
-        #   outer loop                 inner loop          scan target      x,y/y,x
-            ((0, grid.height, 1), (grid.width,),  "min_y",         "y,x"),
-            ((0, grid.width, 1),  (grid.height,), "min_x",         "x,y"),
-            ((grid.height-1, 0-1, -1),(grid.width,),  "max_y",         "y,x"),
-            ((grid.width-1, 0-1, -1), (grid.height,), "max_x",         "x,y"),
-        ]
-        
-        # 从四个方向自外向内搜索块的边界
-        for outer_loop, inner_loop, scan_target, x_y in scan_loops:
-
-            # 扫描线从grid的边缘开始向内推进
-            for scan_line_index in range(*outer_loop):
-
-                # 遍历当前正在扫描的行或列
-                has_found_scan_target = False
-                for scan_cell_index in range(*inner_loop):
-                    # 确定正在扫描的格子坐标
-                    if x_y == "x,y":
-                        x, y = scan_line_index, scan_cell_index
-                    else:
-                        y, x = scan_line_index, scan_cell_index
-
-                    
-                    # 首次发现时记录当前的扫描线的推进距离 scan_line 这就是块的边界
-                    if grid[x, y] == biggest_blob["id"]:
-                        biggest_blob[scan_target] = scan_line_index
-                        has_found_scan_target = True
-                        break
-                
-                # 首次发现块后, 结束当前方向上的扫描
-                if has_found_scan_target:
-                    break
-        
-        # 计算规格
-        biggest_blob["width"] = biggest_blob["max_x"] - biggest_blob["min_x"] + 1
-        biggest_blob["height"] = biggest_blob["max_y"] - biggest_blob["min_y"] + 1
-        
-        # 检测是否满足对块的规格限制
-        if (blob_min_width <= biggest_blob['width'] <= blob_max_width)  and  (blob_min_height < biggest_blob['height'] <= blob_max_height):
-            
-            # 设置最大块之外的地方填充为0, 并设置最大块的填充值为1
-            for x in range(grid.width):
-                for y in range(grid.height):
-                    if grid[x, y] == biggest_blob['id']:
-                        grid[x, y] = ONE
-                    else:
-                        grid[x, y] = ZERO
-            
-            # 终止外层while循环, 返回最大块的信息
-            # print("loop_count:", loop_count)
-            return (biggest_blob["min_x"], biggest_blob["min_y"], biggest_blob["width"], biggest_blob["height"])
-        
-        # else:
-        #     import test_tools
-        #     test_tools.print_grid(grid, symbols=' ')
-
+        largest = find_largest_connected_component(grid, survival_value)
+        if largest is not None:
+            blob_x, blob_y, blob_w, blob_h = largest.find_bounding_rect(True)
+            # 检测是否满足对块的规格限制
+            if (blob_min_width <= blob_w <= blob_max_width) and (blob_min_height <= blob_h <= blob_max_height):
+                largest = largest[blob_x: blob_x+blob_w, blob_y: blob_y+blob_h]
+                return largest.map(lambda x: int(x))
