@@ -44,9 +44,15 @@ def try_map_room_to_grid_(grid: array2d[int], room_grid: array2d[int], delta_x: 
     return True
     
 
-def brogue_attachRooms(grid:array2d[int], room_profile:DungeonProfile, max_attempts:int, max_rooms:int):
+def brogue_attachRooms(grid: array2d[int], room_profile: DungeonProfile, max_attempts: int, max_rooms: int):
     attempts = 0        # 已经尝试的次数
     rooms = 0           # 已经生成的房间数量
+
+    unordered_xy = []
+    for y in range(grid.height):
+        for x in range(grid.width):
+            unordered_xy.append((x,y))
+
     # 不断尝试生成房间, 直到达到房间数量上限或尝试次数上限
     while attempts < max_attempts and rooms < max_rooms:
         # 生成一个房间并暂存在 roomMap 中
@@ -63,12 +69,8 @@ def brogue_attachRooms(grid:array2d[int], room_profile:DungeonProfile, max_attem
         
         # 将房间在地图上滑动，直到与墙壁对齐
         # 无序遍历grid, 此处的(x,y)指的是两个房间相互接壤的门的位置
-        unordered_xy = []
-        for y in range(grid.height):
-            for x in range(grid.width):
-                unordered_xy.append((x,y))
         random.shuffle(unordered_xy)
-        opposite_map = {0:1, 1:0, 2:3, 3:2}
+        opposite_map = {0: 1, 1: 0, 2: 3, 3: 2}
         for x, y in unordered_xy:
             # 关于 direction_index 的取值说明:
             #  -1: (X,y)无法生成门
