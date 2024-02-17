@@ -145,4 +145,4 @@ def _brogue_createBlobOnGrid(
             # 检测是否满足对块的规格限制
             if (blob_min_width <= blob_w <= blob_max_width) and (blob_min_height <= blob_h <= blob_max_height):
                 largest = largest[blob_x: blob_x+blob_w, blob_y: blob_y+blob_h]
-                return largest.map(lambda x: int(x))
+                return largest.map(lambda x: ONE if x else ZERO)
