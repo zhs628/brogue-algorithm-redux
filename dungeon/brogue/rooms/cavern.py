@@ -4,6 +4,10 @@ import random
 from dungeon.brogue.const import *
 from dungeon.algorithm.grid import find_largest_connected_component
 
+'''
+cavern.py 集合了所有关于生成特定洞穴房间的算法
+'''
+
 # ---------------------------------洞穴---------------------------------
 # 关于洞穴的生成算法, 程序将不断尝试在max_width, max_height内随机生成块, 而直到块的规格符合要求时才会停止
 # 根据经验, 它们的规格多数集中在max_width/2, max_height/2附近, 因此当块的下限min_width, min_height大于max_width/2, max_height/2时, 将很难在短时间内生成洞穴
@@ -35,7 +39,7 @@ def _brogue_designCavern(grid: array2d[int], min_width: int, max_width: int, min
     
     grid.fill_(ZERO)
     
-    blob_grid = array2d(grid.width, grid.height, default=None)  # 用来生成块的网格, 规格与grid一致
+    blob_grid = array2d(max_width, max_height, default=None)  # 用来培育块的网格, 尺寸为块的最大尺寸
     round_count = 2  # 当它被设定地很高时, 生成将非常耗时, 当它越大, 房间越大,但是边缘越粗糙, 反之, 当它越小,房间越小,边缘越光滑
     noise_probability = 0.55
     birth_parameters = "ffffffttt"
@@ -98,7 +102,7 @@ def _brogue_createBlobOnGrid(
         loop_count += 1
         assert loop_count <= TIME_OUT_LOOP
         
-        grid.fill_(ZERO)
+        grid.fill_(dead_value)
         # ---- 生成初始噪声
         for x in range(blob_max_width):
             for y in range(blob_max_height):

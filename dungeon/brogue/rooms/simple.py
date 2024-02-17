@@ -4,6 +4,11 @@ from array2d import array2d
 from dungeon.algorithm import canvas
 from dungeon.brogue.const import *
 
+'''
+simple.py 集合了所有关于生成结构比较简单的房间的算法
+'''
+
+
 # 下面是生成房间的逻辑-------------------------------------------
 
 def brogue_designCircularRoom(grid: array2d[int]):

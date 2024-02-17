@@ -4,6 +4,10 @@ import random
 from dungeon.algorithm.grid import count_connected_components
 from dungeon.brogue.const import *
 
+'''
+utils.py 包含了生成房间的小部分相关算法
+'''
+
 # 在本文件中, 完全复刻自brogue的算法将使用 "brogue_<brogue中该函数的原名>" 命名
 def clamp(x, a, b):
     if a > b: a, b = b, a

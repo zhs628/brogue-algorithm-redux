@@ -4,7 +4,13 @@ from .utils import brogue_chooseRandomDoorSites, brogue_attachHallwayTo, brogue_
 from .simple import *
 from .cavern import *
 
-# 以上所有房间生成算法的调用者, 将从以上房间中随机选择一个生成, 并生成走廊并返回走廊出口----------------------------
+'''
+所有的房间主体形状的生成算法分布在 .cavern.py 和 .simple.py 中
+与房间生成相关的算法在 .utils.py 中
+'''
+
+
+# 所有房间生成算法的调用者, 将根据房间生成权重数组从所有房间中随机选择一个生成, 并生成走廊并返回走廊出口----------------------------
 def brogue_designRandomRoom(grid: array2d[int], room_type_frequencies=(1,1,1,1,1,1,1,1), has_doors=True, has_hallway=True):
     '''
     在空的grid中就地生成一个随机的房间, 附加上走廊并返回走廊出口
