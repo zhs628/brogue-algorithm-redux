@@ -1,8 +1,8 @@
 from array2d import array2d
 import random
 
-from dungeon.algorithm.grid import count_connected_components
 from dungeon.brogue.const import *
+from dungeon.brogue.doors import DoorTester
 
 '''
 utils.py 包含了生成房间的小部分相关算法
@@ -15,69 +15,6 @@ def clamp(x, a, b):
     if x > b: return b
     return x
 
-"""
-? 1 ?
-. 2 .
-? 1 ?
-"""
-
-# 下面是生成门的逻辑---------------------------------------------------
-def brogue_directionOfDoorSite(grid:array2d[int], door_x:int, door_y:int):
-    '''
-    以(door_X, door_Y)为中心, 搜索邻近的4个格子是否有且仅有一个符合"能够让位于(door_x, door_y)的门打开"条件
-    
-    返回值: Int 
-        -1: (door_X,door_y)附近无法生成门
-        0:  可以生成门, 将朝向上
-        1:  可以生成门, 将朝向下
-        2:  可以生成门, 将朝向左
-        3:  可以生成门, 将朝向右
-    
-    我们希望生成于(door_x,door_y)的门能够不被阻挡地向一个空的方向打开, 并保证门的背后就是房间, 还需保证一个门仅有唯一的可选打开方向
-    
-    本算法在理论上, 只有这一种情况是可以生成门的:  
-                            ? 1 ?
-                            . 2 .   问号可以是任意格子,加号是(door_X,door_Y), 实心方块是房间格子(值为1), 此时门的朝向为(door_x, door_y)的下方, 函数将返回1
-    下面的情况都无法生成门:
-        1. 2个及以上邻边都有打开门的条件:
-              . 1 1
-              . 2 1   此处因为下侧和左侧都符合打开门的条件, 因此这一格不能生成门, 必须仅有一侧能够打开门, 才符合最终条件
-              . . .
-        2. 门的打开方向是地图边界:
-            \\| . 1
-            \\| 2 1 <-- 此处因为其对称点在地图边界外, 因此不能生成门
-            \\| . 1
-    
-    '''
-    
-    # 门不能生成在房间内，而至少是房间边缘的外侧一格
-    if grid[door_x, door_y] == ONE:
-        return -1 # no direction
-    
-    edge_neighbor_pos_list = [
-        (door_x, door_y - 1),       # 上
-        (door_x, door_y + 1),       # 下
-        (door_x - 1, door_y),       # 左
-        (door_x + 1, door_y),       # 右
-    ]
-    
-    selected_direction_index = -1
-    for direction in [0, 1, 2, 3]:
-        neighbor_x, neighbor_y = edge_neighbor_pos_list[direction]
-        # TODO: grid[neighbor_x, neighbor_y] 需要满足什么条件？
-        if not grid.is_valid(neighbor_x, neighbor_y):
-            continue
-        # 以(door_x, door_y)为中心, 计算其对称点的坐标
-        opposite_x = door_x - (neighbor_x - door_x)
-        opposite_y = door_y - (neighbor_y - door_y)
-        # 如果对称点不是房间格子, 则不能打开门, 因此跳过
-        if grid.get(opposite_x, opposite_y) != ONE:
-            continue
-        # 发现不止一处可以打开门的方向, 则无法生成门
-        if selected_direction_index != -1:
-            return -1 # no direction
-        selected_direction_index = direction
-    return selected_direction_index
 
 def brogue_chooseRandomDoorSites(grid: array2d[int]):
     '''
@@ -109,19 +46,14 @@ def brogue_chooseRandomDoorSites(grid: array2d[int]):
         5   # right
     ]
     
-    direction_delta_list = [
-        [0, -1],
-        [0, 1],
-        
-    [-1, 0], [1, 0]
-    ]
+    direction_delta_list = [[0, -1], [0, 1], [-1, 0], [1, 0]]
 
-    
+    door_tester = DoorTester(buffer_grid)
     for x in range(buffer_grid.width):
         for y in range(buffer_grid.height):
             
             # 首先判断本格是否满足"可以向本方向打开门"的判断标准的第一点
-            direction_index = brogue_directionOfDoorSite(buffer_grid, x, y)
+            direction_index = door_tester.test(x, y)
             if direction_index == -1:  # no direction  表示本格无法满足条件
                 continue
             

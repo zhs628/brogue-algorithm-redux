@@ -7,6 +7,7 @@ import random
 from dungeon.brogue.const import *
 from dungeon.brogue import rooms as Rooms
 from dungeon.algorithm.grid import count_connected_components
+from dungeon.brogue.doors import DoorTester
 from dungeon import test_tools
 
 
@@ -71,16 +72,10 @@ def brogue_attachRooms(grid: array2d[int], room_profile: DungeonProfile, max_att
         # 无序遍历grid, 此处的(x,y)指的是两个房间相互接壤的门的位置
         random.shuffle(unordered_xy)
         opposite_map = {0: 1, 1: 0, 2: 3, 3: 2}
+        door_tester = DoorTester(grid)
         for x, y in unordered_xy:
-            # 关于 direction_index 的取值说明:
-            #  -1: (X,y)无法生成门
-            #   0: 可以生成门, 将朝向上     
-            #   1: 可以生成门, 将朝向下     
-            #   2: 可以生成门, 将朝向左     
-            #   3: 可以生成门, 将朝向右
-            direction_index = Rooms.brogue_directionOfDoorSite(grid, x, y)
+            direction_index = door_tester.test(x, y)
             if direction_index == -1:
-                # 确保 grid(x,y) 可以生成门
                 continue
             
             opposite_direction_index = opposite_map[direction_index]
@@ -90,7 +85,6 @@ def brogue_attachRooms(grid: array2d[int], room_profile: DungeonProfile, max_att
                 continue
 
             # opposite_door_position 与 (x, y) 最终映射为同一个点，即门的位置
-            
             delta_x = x - opposite_door_position[0]
             delta_y = y - opposite_door_position[1]
             # 尝试插入房间
