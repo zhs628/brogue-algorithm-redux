@@ -96,26 +96,17 @@ def _brogue_createBlobOnGrid(
     '''
     
     survival_value, dead_value = -1, -2
-    TIME_OUT_LOOP = 10000
+    TIME_OUT_LOOP = 2000
     loop_count = 0
     while True:
         loop_count += 1
         assert loop_count <= TIME_OUT_LOOP
         
-        grid.fill_(dead_value)
         # ---- 生成初始噪声
-        for x in range(blob_max_width):
-            for y in range(blob_max_height):
-                if not grid.is_valid(x, y):
-                    continue
-                if random.random() < noise_probability:
-                    grid[x,y] = survival_value
-                else:
-                    grid[x,y] = dead_value
+        grid.apply_(lambda _: survival_value if random.random() < noise_probability else dead_value)
         
         # ---- 细胞自动机开始数轮迭代
         for _ in range(round_count):
-
             # 每轮迭代遍历并修改 blob_grid 所有格子
             last_grid = grid.copy()  # 记录上一轮迭代的最终结果, 接下来将就地修改blob_grid
 
