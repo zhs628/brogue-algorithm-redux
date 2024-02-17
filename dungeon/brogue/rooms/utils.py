@@ -45,49 +45,6 @@ def insert_room_to_grid(grid: array2d, room_grid: array2d, delta_x: int, delta_y
         # 目标点必须是空的合法点
         if grid.get(target_x, target_y) == ZERO:
             insert_room_to_grid(grid, room_grid, delta_x, delta_y, next_x, next_y)
-    
-    
-
-
-def flood_fill(grid: array2d[int], fill_value, target_value, start_x=0, start_y=0):
-    '''
-    从指定位置开始向四边填充, 将值为 target_value 的格子填充为 fill_value 最终返回填充的总面积 
-
-    参数列表:
-        grid:
-            将对该网格就地填充和修改
-        fill_value:
-            填充的值
-        target_value:
-            只有值为 target_value 的格子才会被填充并计算面积
-        start_x:
-            开始填充的横坐标
-        start_y:
-            开始填充的纵坐标
-    '''
-    filled_cell_count = 0
-    if grid[start_x, start_y] != target_value:
-        return filled_cell_count
-    filled_cell_count += _flood_fill_inner_func(grid, fill_value, target_value, start_x, start_y)
-    return filled_cell_count
-
-
-def _flood_fill_inner_func(grid: array2d[int], fill_value, target_value, start_x: int = 0, start_y: int = 0):
-    filled_cell_count = 0
-    grid[start_x, start_y] = fill_value
-    edge_neighbor_pos_list = [
-        [start_x, start_y - 1],
-        [start_x, start_y + 1],
-        [start_x - 1, start_y],
-        [start_x + 1, start_y],
-    ]
-    for next_x, next_y in edge_neighbor_pos_list:
-        if not grid.is_valid(next_x, next_y):
-            break
-        if grid[next_x, next_y] == target_value:
-            filled_cell_count += _flood_fill_inner_func(grid, fill_value, target_value, next_x, next_y)
-    
-    return filled_cell_count + 1  # 将递归结果添加到 filled_cell_count 中并返回
 
 
 """

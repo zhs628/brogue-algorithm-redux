@@ -1,7 +1,6 @@
 from array2d import array2d
 import random
 
-from .utils import flood_fill
 from dungeon.brogue.const import *
 from dungeon.algorithm.grid import find_largest_connected_component
 
