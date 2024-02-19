@@ -10,8 +10,6 @@ from dungeon.brogue.const import *
 """
 # 我倾向于让对侧的门满足某种数学关系，例如 (i+2)%4
 
-DoorDirection = Literal[-1, 0, 1, 2, 3]
-
 class DoorTester:
     def __init__(self, grid: array2d[int]):
         self.grid = grid
@@ -20,7 +18,7 @@ class DoorTester:
         self.grid_neighbors_ONE = grid.count_neighbors(ONE, 'von_neumann')
         self.grid_neighbors_TWO = grid.count_neighbors(TWO, 'moore')
 
-    def test(self, x: int, y: int) -> DoorDirection:
+    def test(self, x: int, y: int) -> Literal[-1, 0, 1, 2, 3]:
         # 目标点必须是 ZERO
         if self.grid.get(x, y) != ZERO:
             return -1

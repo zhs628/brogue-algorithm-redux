@@ -11,7 +11,7 @@ from .cavern import *
 
 
 # 所有房间生成算法的调用者, 将根据房间生成权重数组从所有房间中随机选择一个生成, 并生成走廊并返回走廊出口----------------------------
-def brogue_designRandomRoom(grid: array2d[int], room_type_frequencies=(1,1,1,1,1,1,1,1), has_doors=True, has_hallway=True):
+def brogue_designRandomRoom(grid: array2d[int], room_type_frequencies=(1,1,1,1,1,1,1,1), has_doors=True, has_hallway=True) -> list[tuple[int, int] | None]:
     '''
     在空的grid中就地生成一个随机的房间, 附加上走廊并返回走廊出口
     
@@ -21,7 +21,7 @@ def brogue_designRandomRoom(grid: array2d[int], room_type_frequencies=(1,1,1,1,1
         has_hallway (bool): 是否生成走廊(只有当有has_doors为True时才有效)
         room_type_frequencies (list[float, ROOM_TYPE_COUNT]): 一个长度为ROOM_TYPE_COUNT的列表, 表示每种房间的生成概率权重, 每个权重的值大于等于0即可
     Returns:
-        (list[list[int, 2], 4]): 表示 走廊出口/门 的位置
+        (list[tuple[int, int] | None]): 表示 走廊出口/门 的位置
     '''
     room_type_func_list = [
         brogue_designCrossRoom,
@@ -47,7 +47,7 @@ def brogue_designRandomRoom(grid: array2d[int], room_type_frequencies=(1,1,1,1,1
     f(grid)
     
     # 生成门
-    door_positions = [[-1,-1], [-1,-1], [-1,-1], [-1,-1]]
+    door_positions = [None] * 4
     if has_doors:
         door_positions = brogue_chooseRandomDoorSites(grid)
         

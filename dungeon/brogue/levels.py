@@ -84,7 +84,7 @@ def brogue_attachRooms(grid: array2d[int], room_profile: DungeonProfile, max_att
             
             opposite_direction_index = opposite_map[direction_index]
             opposite_door_position = door_positions[opposite_direction_index]
-            if opposite_door_position == [-1, -1]:
+            if opposite_door_position is None:
                 # 确保门可以双向打开
                 continue
 
