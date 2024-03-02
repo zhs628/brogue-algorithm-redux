@@ -1,8 +1,8 @@
 from array2d import array2d
-
+import random
 from .utils import brogue_chooseRandomDoorSites, brogue_attachHallwayTo
-from .simple import *
-from .cavern import *
+from .simple import brogue_designChunkyRoom, brogue_designCircularRoom, brogue_designCrossRoom, brogue_designEntranceRoom, brogue_designSmallRoom, brogue_designSymmetricalCrossRoom
+from .cavern import brogue_design_cave, brogue_design_compat_cavern, brogue_design_large_east_west_cavern, brogue_design_large_north_south_cavern
 
 '''
 所有的房间主体形状的生成算法分布在 .cavern.py 和 .simple.py 中
@@ -21,21 +21,21 @@ def brogue_designRandomRoom(grid: array2d[int], room_type_frequencies=(1,1,1,1,1
         has_hallway (bool): 是否生成走廊(只有当有has_doors为True时才有效)
         room_type_frequencies (list[float, ROOM_TYPE_COUNT]): 一个长度为ROOM_TYPE_COUNT的列表, 表示每种房间的生成概率权重, 每个权重的值大于等于0即可
     Returns:
-        (list[tuple[int, int] | None]): 表示 走廊出口/门 的位置
+        (list[list[int, 2], 4]): 表示 走廊出口/门 的位置
     '''
-    room_type_func_list = [
-        brogue_designCrossRoom,
-        brogue_designSymmetricalCrossRoom,
-        brogue_designSmallRoom,
-        brogue_designCircularRoom,
-        brogue_designChunkyRoom,
+    room_type_func_list = room_type_func_list = [
+        "brogue_designCrossRoom",
+        "brogue_designSymmetricalCrossRoom",
+        "brogue_designSmallRoom",
+        "brogue_designCircularRoom",
+        "brogue_designChunkyRoom",
         [
-            brogue_design_compat_cavern,
-            brogue_design_large_north_south_cavern,
-            brogue_design_large_east_west_cavern,
+            "brogue_design_compat_cavern",
+            "brogue_design_large_north_south_cavern",
+            "brogue_design_large_east_west_cavern",
         ],
-        brogue_design_cave,
-        brogue_designEntranceRoom
+        "brogue_design_cave",
+        "brogue_designEntranceRoom"
     ]
     # 按权重选取房间生成函数
     f = random.choices(room_type_func_list, room_type_frequencies)[0]
@@ -44,8 +44,29 @@ def brogue_designRandomRoom(grid: array2d[int], room_type_frequencies=(1,1,1,1,1
         f = random.choice(f)
     
     # 生成房间
-    f(grid)
-    
+    if f == "brogue_designCrossRoom":
+        brogue_designCrossRoom(grid)
+    elif f == "brogue_designSymmetricalCrossRoom":
+        brogue_designSymmetricalCrossRoom(grid)
+    elif f == "brogue_designSmallRoom":
+        brogue_designSmallRoom(grid)
+    elif f == "brogue_designCircularRoom":
+        brogue_designCircularRoom(grid)
+    elif f == "brogue_designChunkyRoom":
+        brogue_designChunkyRoom(grid)
+    elif f == "brogue_design_cave":
+        brogue_design_cave(grid)
+    elif f == "brogue_designEntranceRoom":
+        brogue_designEntranceRoom(grid)
+    elif f == "brogue_design_compat_cavern":
+        brogue_design_compat_cavern(grid)
+    elif f == "brogue_design_large_north_south_cavern":
+        brogue_design_large_north_south_cavern(grid)
+    elif f == "brogue_design_large_east_west_cavern":
+        brogue_design_large_east_west_cavern(grid)
+    else:
+        assert False
+        
     # 生成门
     door_positions = [None] * 4
     if has_doors:
