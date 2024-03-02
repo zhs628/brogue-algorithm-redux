@@ -1,5 +1,6 @@
 from array2d import array2d
 from collections import deque
+import random
 
 DIRS_4 = [(-1, 0), (1, 0), (0, -1), (0, 1)]
 
@@ -44,3 +45,12 @@ def find_largest_connected_component(grid: array2d, value) -> array2d[bool] | No
     counter[0] = 0  # 不考虑未访问的格子
     max_blob_id = counter.index(max(counter))
     return visited.map(lambda x: x == max_blob_id)
+
+def iter_unordered(grid: array2d, cache: list = None) -> list[tuple[int, int]]:
+    if not cache:
+        for y in range(grid.height):
+            for x in range(grid.width):
+                cache.append((x,y))
+    assert len(cache) == grid.numel
+    random.shuffle(cache)
+    return cache.copy()
