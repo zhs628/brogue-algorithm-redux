@@ -57,3 +57,6 @@ def print_grid(grid: array2d[int], message="------------------------", finish_wa
             else:
                 print(f"\x1b[0;{fg}m{symbol}\x1b[0m", end="")
         print()
+
+    # get non-zero count
+    print("sparsity:", grid.count(0), "/", grid.numel)
