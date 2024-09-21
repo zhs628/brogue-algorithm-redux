@@ -111,7 +111,7 @@ def _brogue_createBlobOnGrid(
             last_grid = grid.copy()  # 记录上一轮迭代的最终结果, 接下来将就地修改blob_grid
 
             # 计算当前格子的周围中存在活细胞的数量
-            live_neighbors = grid.count_neighbors(survival_value)
+            live_neighbors = grid.count_neighbors(survival_value, 'Moore')
             
             for cell_x in range(grid.width):
                 for cell_y in range(grid.height):

@@ -11,7 +11,7 @@ from .cavern import brogue_design_cave, brogue_design_compat_cavern, brogue_desi
 
 
 # 所有房间生成算法的调用者, 将根据房间生成权重数组从所有房间中随机选择一个生成, 并生成走廊并返回走廊出口----------------------------
-def brogue_designRandomRoom(grid: array2d[int], room_type_frequencies=(1,1,1,1,1,1,1,1), has_doors=True, has_hallway=True) -> list[tuple[int, int] | None]:
+def brogue_designRandomRoom(grid: array2d[int], room_type_frequencies=None, has_doors=True, has_hallway=True) -> list[tuple[int, int] | None]:
     '''
     在空的grid中就地生成一个随机的房间, 附加上走廊并返回走廊出口
     
@@ -23,7 +23,8 @@ def brogue_designRandomRoom(grid: array2d[int], room_type_frequencies=(1,1,1,1,1
     Returns:
         (list[list[int, 2], 4]): 表示 走廊出口/门 的位置
     '''
-    room_type_func_list = room_type_func_list = [
+    room_type_frequencies = room_type_frequencies or (1,1,1,1,1,1,1,1)
+    room_type_func_list = [
         "brogue_designCrossRoom",
         "brogue_designSymmetricalCrossRoom",
         "brogue_designSmallRoom",

@@ -20,7 +20,7 @@ def try_map_room_to_grid_(grid: array2d[int], room_grid: array2d[int], delta_x: 
     """
     modified_grid = grid.copy()
     # 预先求出 grid 中每个格子周围的 ZERO 的数量
-    grid_zero_neighbors = grid.count_neighbors(ZERO)
+    grid_zero_neighbors = grid.count_neighbors(ZERO, 'Moore')
 
     # 用底层算法求一下外接矩形，减少 python 层面循环的次数
     x_, y_, w_, h_ = room_grid.find_bounding_rect(ONE)

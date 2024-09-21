@@ -41,7 +41,7 @@ def print_grid(grid: array2d[int], message="------------------------", finish_wa
     if finish_walls:
         grid = grid.copy()
         # 给grid进行描边，描边数值为6
-        neighbors = grid.count_neighbors(1)
+        neighbors = grid.count_neighbors(1, 'Moore')
         for i in range(grid.width):
             for j in range(grid.height):
                 if grid[i, j] == 0 and neighbors[i, j] > 0:
