@@ -1,7 +1,12 @@
 from linalg import vec2i
+from typing import Any, Generator
 
 class Command:
-    pass
+    def __init__(self, invoker: 'Unit') -> None:
+        self.invoker = invoker
+
+    def execute(self) -> Generator[None, Any, int]:
+        raise NotImplementedError
 
 class Unit:
     PRIORITY_VFX = 100          # visual effects take priority
@@ -16,8 +21,14 @@ class Unit:
         self.time_scale = 100      # 时间轴缩放（百分比定点数）
         self.priority = Unit.PRIORITY_DEFAULT   # 回合优先级
 
-    def get_input(self) -> Command:
+    def get_input(self) -> Command | None:
+        return
+    
+    def get_input_async(self) -> Generator[None, Any, Command]:
         raise NotImplementedError
+    
+    def is_ready(self) -> bool:
+        return True
 
 
 class Actor(Unit):
